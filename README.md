@@ -88,6 +88,7 @@ agents:
     provider: "google"
 rounds: 5
 mode: "converge"
+```
 
 ## Contributing
 
