@@ -1,0 +1,9 @@
+# Bandit configuration for Vors Ting
+# Exclude test files from assert checks (B101)
+# since assert statements are standard in test code
+
+skips:
+  - B101
+
+exclude_dirs:
+  - tests
