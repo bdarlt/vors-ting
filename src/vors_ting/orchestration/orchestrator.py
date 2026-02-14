@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+from sentence_transformers import SentenceTransformer
+
 from vors_ting.agents.creator import CreatorAgent
 from vors_ting.agents.curator import CuratorAgent
 from vors_ting.agents.reviewer import ReviewerAgent
@@ -11,6 +14,18 @@ from vors_ting.core.config import Config
 
 if TYPE_CHECKING:
     from vors_ting.agents.base import BaseAgent
+
+# Lazy-loaded embedding model (initialized on first use)
+_embedding_model: SentenceTransformer | None = None
+
+
+def _get_embedding_model() -> SentenceTransformer:
+    """Get or initialize the embedding model."""
+    global _embedding_model
+    if _embedding_model is None:
+        # Use a lightweight model good for semantic similarity
+        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+    return _embedding_model
 
 
 class Orchestrator:
@@ -156,10 +171,41 @@ class Orchestrator:
     def _check_convergence(
         self, old_artifacts: list[str], new_artifacts: list[str]
     ) -> bool:
-        """Check if artifacts have converged."""
-        # TODO: Implement proper convergence checking
-        del old_artifacts, new_artifacts  # Unused arguments
-        return False
+        """Check if artifacts have converged using semantic similarity.
+
+        Compares each old artifact with its corresponding new artifact
+        using cosine similarity of embeddings. Converged if all pairs
+        exceed the configured threshold.
+
+        Args:
+            old_artifacts: Artifacts from previous round
+            new_artifacts: Refined artifacts from current round
+
+        Returns:
+            True if all artifacts have converged, False otherwise
+        """
+        if len(old_artifacts) != len(new_artifacts):
+            return False
+
+        if not old_artifacts:
+            return True  # No artifacts means trivial convergence
+
+        # Get embeddings for all artifacts
+        model = _get_embedding_model()
+        old_embeddings = model.encode(old_artifacts, convert_to_numpy=True)
+        new_embeddings = model.encode(new_artifacts, convert_to_numpy=True)
+
+        # Compute cosine similarity for each pair
+        threshold = self.config.convergence.similarity_threshold
+        for old_emb, new_emb in zip(old_embeddings, new_embeddings):
+            similarity = float(
+                np.dot(old_emb, new_emb)
+                / (np.linalg.norm(old_emb) * np.linalg.norm(new_emb))
+            )
+            if similarity < threshold:
+                return False
+
+        return True
 
     def _log_round(self, round_num: int, data: dict[str, Any]) -> None:
         """Log round data."""
@@ -168,7 +214,6 @@ class Orchestrator:
 
     def save_state(self, output_dir: Path) -> None:
         """Save the current state to disk."""
-
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Save round history

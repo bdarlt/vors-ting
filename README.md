@@ -95,6 +95,11 @@ We warmly welcome contributions! Whether it's reporting a bug, discussing a new 
 
 Please see our [Contributing Guide](CONTRIBUTING.md) for more details on how to get involved. All contributors are expected to adhere to our Code of Conduct.
 
+**For developers:** Check out our documentation:
+- [Development Guide](docs/development_guide.md) - Comprehensive development advice and lessons learned
+- [Agent Development Guide](docs/agents.md) - Specific guidance for working with agents
+- [Coding Standards](docs/CODING_STANDARDS.md) - Coding conventions and best practices
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

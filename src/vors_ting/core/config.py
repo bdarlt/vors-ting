@@ -103,7 +103,7 @@ class Config(BaseModel):
 
 def load_config(config_path: Path) -> Config:
     """Load configuration from YAML file."""
-    with open(config_path, encoding="utf-8") as f:
+    with config_path.open(encoding="utf-8") as f:
         config_data = yaml.safe_load(f)
 
     return Config(**config_data)

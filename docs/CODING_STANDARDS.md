@@ -201,6 +201,61 @@ except ValueError:
 # Pytest configuration
 ```
 
+## Lessons Learned and Best Practices
+
+### Import Structure
+
+**Use absolute imports consistently** to avoid mocking issues in tests and make refactoring easier:
+
+```python
+# ✅ Recommended
+from vors_ting.agents.creator import CreatorAgent
+from vors_ting.core.config import Config
+
+# ❌ Avoid
+from ..agents.creator import CreatorAgent
+from ..core.config import Config
+```
+
+### Testing Strategy
+
+**Mock at the right level** - where the code under test imports from, not where classes are defined:
+
+```python
+# ✅ Correct mock target
+@patch('vors_ting.orchestration.orchestrator.CreatorAgent')
+
+# ❌ Incorrect mock target (causes tests to fail)
+@patch('vors_ting.agents.creator.CreatorAgent')
+```
+
+### Project Structure
+
+**Create `__init__.py` files immediately** for all packages to avoid "implicit namespace package" warnings:
+
+```bash
+# Create package structure with init files
+touch src/vors_ting/{agents,core,orchestration,utils}/__init__.py
+```
+
+### Type Annotations
+
+**Use modern Python 3.10+ syntax** instead of legacy typing module:
+
+```python
+# ✅ Modern syntax (Python 3.10+)
+from typing import Any
+
+def function(arg: str | None = None) -> dict[str, Any]:
+    pass
+
+# ❌ Legacy syntax
+from typing import Optional, Dict, Any
+
+def function(arg: Optional[str] = None) -> Dict[str, Any]:
+    pass
+```
+
 ## Additional Resources
 
 - [PEP 8 Style Guide](https://pep8.org/)
@@ -208,6 +263,8 @@ except ValueError:
 - [Python Type Hints](https://docs.python.org/3/library/typing.html)
 - [PEP 695: Type Parameter Syntax](https://peps.python.org/pep-0695/)
 - [PEP 621: Project Metadata](https://peps.python.org/pep-0621/)
+- [Development Guide](development_guide.md) - Comprehensive development advice
+- [Agent Development Guide](agents.md) - Specific guidance for agent implementation
 
 ---
 
