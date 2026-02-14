@@ -1,0 +1,52 @@
+# Simple configuration example for Vörs ting
+# This demonstrates a basic dyadic pattern (creator + skeptic)
+
+task: "Write an ADR for migrating from REST to GraphQL"
+artifact_type: "adr"
+
+agents:
+  - name: "Creator"
+    role: "creator"
+    model: "gpt-4-turbo"
+    provider: "openai"
+    temperature: 0.2
+    system_prompt: "You are an expert software architect. Generate comprehensive ADRs."
+  
+  - name: "Skeptic"
+    role: "reviewer"
+    model: "claude-3-opus-20240229"
+    provider: "anthropic"
+    temperature: 0.3
+    system_prompt: "You are a critical reviewer. Find flaws and suggest improvements."
+
+rounds: 3
+mode: "converge"
+
+rubric:
+  criteria:
+    - name: "Accuracy"
+      weight: 0.4
+      guidelines: "Check facts against known sources; no hallucinations."
+    - name: "Clarity"
+      weight: 0.3
+      guidelines: "Is it understandable to a non-expert?"
+    - name: "Completeness"
+      weight: 0.3
+      guidelines: "Does it address all aspects of the task?"
+
+convergence:
+  method: "consensus"
+  max_rounds: 5
+  triage: true
+
+safeguards:
+  devil_advocate:
+    enabled: true
+    rotation: "random_per_round"
+    skip_rate: 0.1
+  rejection_option: true
+
+metrics:
+  log_dir: "metrics/"
+  regret_tracking: true
+  dissent_impact: true

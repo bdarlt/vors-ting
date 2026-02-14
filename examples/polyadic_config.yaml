@@ -1,0 +1,67 @@
+# Polyadic configuration example for Vörs ting
+# This demonstrates multiple creators reviewing each other's work
+
+task: "Design a new authentication system"
+artifact_type: "design_doc"
+
+agents:
+  - name: "Creator1"
+    role: "creator"
+    model: "gpt-4-turbo"
+    provider: "openai"
+    temperature: 0.2
+    system_prompt: "You are a security-focused architect. Design secure systems."
+  
+  - name: "Creator2"
+    role: "creator"
+    model: "claude-3-opus-20240229"
+    provider: "anthropic"
+    temperature: 0.2
+    system_prompt: "You are a user-experience focused architect. Design intuitive systems."
+  
+  - name: "Creator3"
+    role: "creator"
+    model: "gemini-1.5-pro"
+    provider: "google"
+    temperature: 0.2
+    system_prompt: "You are a performance-focused architect. Design efficient systems."
+
+rounds: 4
+mode: "converge"
+
+rubric:
+  criteria:
+    - name: "Security"
+      weight: 0.35
+      guidelines: "Evaluate security best practices and potential vulnerabilities."
+    - name: "Usability"
+      weight: 0.3
+      guidelines: "Assess ease of use and developer experience."
+    - name: "Performance"
+      weight: 0.2
+      guidelines: "Consider efficiency and scalability."
+    - name: "Completeness"
+      weight: 0.15
+      guidelines: "Does it address all requirements?"
+
+convergence:
+  method: "similarity"
+  similarity_threshold: 0.9
+  max_rounds: 6
+  triage: true
+
+safeguards:
+  devil_advocate:
+    enabled: true
+    rotation: "fixed_agent"
+    skip_rate: 0.05
+  rejection_option: true
+  shadow_rubric:
+    enabled: true
+    check_frequency: 2
+
+metrics:
+  log_dir: "metrics/"
+  regret_tracking: true
+  dissent_impact: true
+  escalation_usefulness: true
