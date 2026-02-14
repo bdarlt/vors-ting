@@ -107,12 +107,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
-- **Phase 1 (Core Infrastructure):** Configuration loader, basic agent abstraction, file persistence.
-- **Phase 2 (Orchestration):** Implement dyadic and polyadic loops, feedback aggregation.
-- **Phase 3 (Convergence & Safeguards):** Convergence detection, disagreement triage, Devil's Advocate safeguard.
-- **Phase 4 (Agent Memory System):** Persistent, anti‑fragile memory for learning from past interactions.
-- **Phase 5 (Divergence Mode):** Support for brainstorming and exploration tasks.
-- **Phase 6 (Metrics & Polish):** Metrics dashboard, comprehensive testing, and documentation.
+| Phase | Status | Description |
+|-------|--------|-------------|
+| **1** | ✅ Complete | Core Infrastructure — Config loader, agent abstraction, file persistence |
+| **2** | ✅ Complete | Orchestration — Dyadic/polyadic loops, feedback aggregation |
+| **3** | 🚧 Partial | Convergence & Safeguards — Semantic convergence detection ✅, Devil's Advocate ❌ |
+| **4** | 📋 Planned | Agent Memory System — Persistent, anti‑fragile memory (design complete) |
+| **5** | 📋 Planned | Divergence Mode — Brainstorming and exploration workflows |
+| **6** | 🚧 Partial | Metrics & Polish — Comprehensive testing ✅, metrics dashboard ❌ |
 
 ## FAQ
 
