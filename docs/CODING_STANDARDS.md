@@ -7,15 +7,15 @@ This document outlines the essential coding standards for the MCP Server Git pro
 ### PEP 8 Compliance
 - Follow PEP 8 guidelines strictly
 - Use 4 spaces for indentation
-- Limit lines to 88 characters (Black default)
+- Limit lines to 88 characters
 - Use descriptive names following PEP 8 conventions
 
 ### Code Formatting
-- **Formatter**: Black (automatic formatting)
+- **Formatter**: Ruff (automatic formatting)
 - **Line Length**: 88 characters maximum
 - **Quotes**: Double quotes preferred (`"`)
 - **Trailing Commas**: Required in multi-line structures
-- **Imports**: Organized automatically by Black
+- **Imports**: Organized automatically by Ruff
 
 ### Python Version
 - **Target**: Python 3.12+
@@ -179,12 +179,35 @@ except ValueError:
     )
 ```
 
+## Tool Configuration Standards
+
+### Configuration File Location
+- **All tool configuration must be stored in `pyproject.toml`** following [PEP 621](https://peps.python.org/pep-0621/)
+- Avoid separate configuration files (`.ini`, `.cfg`, `.yaml`, etc.) when possible
+- Use standardized PEP 621 sections for tool configuration
+
+**Example structure:**
+```toml
+[project]
+# PEP 621 project metadata
+
+[tool.ruff]
+# Ruff configuration
+
+[tool.pyright]
+# Pyright configuration
+
+[tool.pytest.ini_options]
+# Pytest configuration
+```
+
 ## Additional Resources
 
 - [PEP 8 Style Guide](https://pep8.org/)
-- [Black Code Formatter](https://black.readthedocs.io/)
+- [Ruff Formatter](https://docs.astral.sh/ruff/)
 - [Python Type Hints](https://docs.python.org/3/library/typing.html)
 - [PEP 695: Type Parameter Syntax](https://peps.python.org/pep-0695/)
+- [PEP 621: Project Metadata](https://peps.python.org/pep-0621/)
 
 ---
 
