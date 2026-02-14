@@ -1,8 +1,16 @@
 # Vörs ting
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-<!-- Add other badges here as your project matures, e.g., build status, test coverage -->
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+
+<!-- CI/CD Badges -->
+[![CI Status](https://github.com/bdarlt/vors-ting/actions/workflows/ci.yml/badge.svg)](https://github.com/bdarlt/vors-ting/actions/workflows/ci.yml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badges/v2.json)](https://github.com/astral-sh/ruff)
+[![Pyright](https://img.shields.io/badge/type--checked-pyright-blue)](https://github.com/microsoft/pyright)
+[![pytest](https://img.shields.io/badge/tested_with-pytest-blue)](https://docs.pytest.org/)
+[![Bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
+[![McCabe](https://img.shields.io/badge/complexity-mccabe-orange)](https://github.com/PyCQA/mccabe)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://www.mkdocs.org/)
 
 Vörs ting is a multi‑agent workflow tool for iterative feedback loops that drive convergent (and optionally divergent) refinement of work products. Inspired by the Norse goddess **Vör**, from whom nothing can be hidden, and the ancient ***ting*** assembly, it orchestrates AI agents to critique, debate, and improve artifacts until wisdom is reached.
 
