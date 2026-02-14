@@ -114,6 +114,6 @@ def test_save_state(tmp_path: Path) -> None:
     assert (output_dir / "artifact_0.txt").exists()
 
     # Check content
-    with open(output_dir / "artifact_0.txt") as f:
+    with (output_dir / "artifact_0.txt").open() as f:
         content = f.read()
         assert content == "Test content"

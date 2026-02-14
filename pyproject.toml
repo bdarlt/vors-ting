@@ -54,8 +54,13 @@ target-version = ["py313"]
 [tool.ruff]
 line-length = 88
 target-version = "py313"
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "D", "UP", "YTT", "S", "B", "A", "C4", "T10", "EM", "EXE", "ISC", "ICN", "G", "INP", "PIE", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "NPY", "AIR", "PERF", "FURB", "LOG", "RUF"]
 ignore = ["D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "SLF001", "PLR2004", "PLC0415"]
 
 [tool.mypy]
 python_version = "3.13"
@@ -83,3 +88,13 @@ skip_covered = false
 [tool.mkdocs]
 theme = "readthedocs"
 plugins = ["mkdocstrings"]
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__", "**/.pytest_cache", "**/.mypy_cache"]
+venvPath = "."
+venv = "venv"
+reportMissingImports = "warning"
+reportMissingModuleSource = "warning"
+pythonVersion = "3.13"
+pythonPlatform = "Windows"

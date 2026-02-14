@@ -1,1 +1,1 @@
-"""Agent implementations for Vörs ting."""  
+"""Agent implementations for Vörs ting."""

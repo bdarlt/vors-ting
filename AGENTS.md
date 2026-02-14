@@ -21,11 +21,29 @@ dense, structured, and actionable. Remove fluff, maximize signal.
 
 ```bash
 pytest -x                    # fail fast tests
+pytest -m "not slow"         # skip slow tests (embedding model)
 ruff check --fix .           # lint + auto-fix
 ruff format .                # format
 pyright                      # type check
 vors run examples/simple.yaml  # run tool
 ```
+
+### Windows Shell Quirks
+```powershell
+# ❌ Doesn't work on Windows
+cd path && uv run pytest
+
+# ✅ Use semicolons on Windows
+Set-Location path; uv run pytest
+# or
+cd path; uv run pytest
+```
+
+### Test Markers
+- `@pytest.mark.slow` — Tests that load embedding models (~20s first run)
+- `@pytest.mark.integration` — Tests requiring API keys
+- Skip slow: `pytest -m "not slow"`
+- Run only slow: `pytest -m slow`
 
 ## Code Patterns
 

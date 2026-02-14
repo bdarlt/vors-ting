@@ -1,1 +1,1 @@
-"""Orchestration functionality for Vörs ting.""" 
+"""Orchestration functionality for Vörs ting."""

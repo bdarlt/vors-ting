@@ -1,1 +1,1 @@
-"""Core functionality for Vörs ting."""  
+"""Core functionality for Vörs ting."""

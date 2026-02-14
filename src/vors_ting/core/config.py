@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class AgentConfig(BaseModel):
@@ -84,7 +84,8 @@ class Config(BaseModel):
     divergence: DivergenceConfig = Field(default_factory=DivergenceConfig)
     skill_prompts: dict[str, str] = Field(default_factory=dict)
 
-    @validator("agents")
+    @field_validator("agents")
+    @classmethod
     def validate_agents(cls, v: list[AgentConfig]) -> list[AgentConfig]:
         """Validate that at least one agent is configured."""
         if not v:
@@ -92,7 +93,8 @@ class Config(BaseModel):
             raise ValueError(error_msg)
         return v
 
-    @validator("rounds")
+    @field_validator("rounds")
+    @classmethod
     def validate_rounds(cls, v: int) -> int:
         """Validate that rounds is a positive integer."""
         if v <= 0:

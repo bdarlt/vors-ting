@@ -1,0 +1,26 @@
+# Minimal test configuration for Vörs ting
+# Use this for quick manual testing without real API calls
+
+task: "Write a one-paragraph description of Python programming"
+artifact_type: "doc"
+
+agents:
+  - name: "TestCreator"
+    role: "creator"
+    model: "gpt-4"
+    provider: "openai"
+    temperature: 0.2
+  
+  - name: "TestReviewer"
+    role: "reviewer"
+    model: "gpt-4"
+    provider: "openai"
+    temperature: 0.3
+
+rounds: 2
+mode: "converge"
+
+convergence:
+  method: "similarity"
+  similarity_threshold: 0.95
+  max_rounds: 2
