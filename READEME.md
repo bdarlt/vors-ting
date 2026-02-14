@@ -80,3 +80,37 @@ agents:
     provider: "google"
 rounds: 5
 mode: "converge"
+
+## Contributing
+
+We warmly welcome contributions! Whether it's reporting a bug, discussing a new feature, or submitting a pull request, please follow our guidelines.
+
+Please see our [Contributing Guide](CONTRIBUTING.md) for more details on how to get involved. All contributors are expected to adhere to our Code of Conduct.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Roadmap
+
+- **Phase 1 (Core Infrastructure):** Configuration loader, basic agent abstraction, file persistence.
+- **Phase 2 (Orchestration):** Implement dyadic and polyadic loops, feedback aggregation.
+- **Phase 3 (Convergence & Safeguards):** Convergence detection, disagreement triage, Devil's Advocate safeguard.
+- **Phase 4 (Agent Memory System):** Persistent, anti‑fragile memory for learning from past interactions.
+- **Phase 5 (Divergence Mode):** Support for brainstorming and exploration tasks.
+- **Phase 6 (Metrics & Polish):** Metrics dashboard, comprehensive testing, and documentation.
+
+## FAQ
+
+**Q: What kinds of artifacts can I use this for?**
+A: Anything text-based! ADRs, unit tests, process documentation, Cursor rules, meeting templates—the tool is domain-agnostic. You can inject domain-specific "skill" prompts to guide the agents.
+
+**Q: Do I need API keys for all the models I want to use?**
+A: Yes. Vörs ting uses LiteLLM, so you need valid API keys for the providers (Anthropic, Google, OpenAI, etc.) you specify in your configuration. Set these as environment variables (e.g., `ANTHROPIC_API_KEY`).
+
+**Q: What is "anti‑fragile memory"?**
+A: It's our agent memory system that tracks agent performance over time. It learns from past successes, failures, and human feedback to dynamically improve the system—getting stronger from mistakes.
+
+## Contact
+
+For questions, support, or feedback, please use the [GitHub Issues](https://github.com/bdarlt/vors-ting/issues) page.
