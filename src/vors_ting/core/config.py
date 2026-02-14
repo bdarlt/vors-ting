@@ -1,7 +1,7 @@
 """Configuration loading and validation for Vörs ting."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field, validator
@@ -9,16 +9,18 @@ from pydantic import BaseModel, Field, validator
 
 class AgentConfig(BaseModel):
     """Configuration for a single agent."""
+
     name: str
     role: str  # creator, reviewer, curator
     model: str
     provider: str
     temperature: float = 0.2
-    system_prompt: Optional[str] = None
+    system_prompt: str | None = None
 
 
 class RubricCriterion(BaseModel):
     """A single criterion in the evaluation rubric."""
+
     name: str
     weight: float
     guidelines: str
@@ -26,13 +28,15 @@ class RubricCriterion(BaseModel):
 
 class RubricConfig(BaseModel):
     """Configuration for the evaluation rubric."""
-    criteria: List[RubricCriterion]
+
+    criteria: list[RubricCriterion]
     living: bool = False
-    shadow_path: Optional[str] = None
+    shadow_path: str | None = None
 
 
 class ConvergenceConfig(BaseModel):
     """Configuration for convergence detection."""
+
     method: str = "consensus"  # consensus, similarity, hybrid
     similarity_threshold: float = 0.95
     max_rounds: int = 5
@@ -41,13 +45,15 @@ class ConvergenceConfig(BaseModel):
 
 class SafeguardsConfig(BaseModel):
     """Configuration for safeguards."""
-    devil_advocate: Dict[str, Any] = Field(default_factory=dict)
+
+    devil_advocate: dict[str, Any] = Field(default_factory=dict)
     rejection_option: bool = True
-    shadow_rubric: Dict[str, Any] = Field(default_factory=dict)
+    shadow_rubric: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetricsConfig(BaseModel):
     """Configuration for metrics logging."""
+
     log_dir: str = "metrics/"
     regret_tracking: bool = True
     dissent_impact: bool = True
@@ -56,6 +62,7 @@ class MetricsConfig(BaseModel):
 
 class DivergenceConfig(BaseModel):
     """Configuration for divergence mode."""
+
     min_clusters: int = 3
     clustering_method: str = "embedding"
     curator_model: str = "gpt-4-turbo"
@@ -64,36 +71,39 @@ class DivergenceConfig(BaseModel):
 
 class Config(BaseModel):
     """Main configuration for Vörs ting."""
+
     task: str
     artifact_type: str
-    agents: List[AgentConfig]
+    agents: list[AgentConfig]
     rounds: int = 5
     mode: str = "converge"  # converge or diverge
-    rubric: Optional[RubricConfig] = None
+    rubric: RubricConfig | None = None
     convergence: ConvergenceConfig = Field(default_factory=ConvergenceConfig)
     safeguards: SafeguardsConfig = Field(default_factory=SafeguardsConfig)
     metrics: MetricsConfig = Field(default_factory=MetricsConfig)
     divergence: DivergenceConfig = Field(default_factory=DivergenceConfig)
-    skill_prompts: Dict[str, str] = Field(default_factory=dict)
+    skill_prompts: dict[str, str] = Field(default_factory=dict)
 
     @validator("agents")
-    def validate_agents(cls, v: List[AgentConfig]) -> List[AgentConfig]:
+    def validate_agents(cls, v: list[AgentConfig]) -> list[AgentConfig]:
         """Validate that at least one agent is configured."""
         if not v:
-            raise ValueError("At least one agent must be configured")
+            error_msg = "At least one agent must be configured"
+            raise ValueError(error_msg)
         return v
 
     @validator("rounds")
     def validate_rounds(cls, v: int) -> int:
         """Validate that rounds is a positive integer."""
         if v <= 0:
-            raise ValueError("Rounds must be a positive integer")
+            error_msg = "Rounds must be a positive integer"
+            raise ValueError(error_msg)
         return v
 
 
 def load_config(config_path: Path) -> Config:
     """Load configuration from YAML file."""
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         config_data = yaml.safe_load(f)
-    
+
     return Config(**config_data)
