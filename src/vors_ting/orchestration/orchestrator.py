@@ -21,7 +21,7 @@ _embedding_model: SentenceTransformer | None = None
 
 def _get_embedding_model() -> SentenceTransformer:
     """Get or initialize the embedding model."""
-    global _embedding_model
+    global _embedding_model  # noqa: PLW0603 - lazy singleton pattern
     if _embedding_model is None:
         # Use a lightweight model good for semantic similarity
         _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -183,6 +183,7 @@ class Orchestrator:
 
         Returns:
             True if all artifacts have converged, False otherwise
+
         """
         if len(old_artifacts) != len(new_artifacts):
             return False
@@ -197,7 +198,7 @@ class Orchestrator:
 
         # Compute cosine similarity for each pair
         threshold = self.config.convergence.similarity_threshold
-        for old_emb, new_emb in zip(old_embeddings, new_embeddings):
+        for old_emb, new_emb in zip(old_embeddings, new_embeddings, strict=True):
             similarity = float(
                 np.dot(old_emb, new_emb)
                 / (np.linalg.norm(old_emb) * np.linalg.norm(new_emb))
