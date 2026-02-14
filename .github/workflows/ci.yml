@@ -66,19 +66,6 @@ jobs:
       - name: Run Bandit
         run: bandit -r . -c .bandit.yml
 
-  mccabe:
-    name: McCabe (Complexity)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - name: Install dependencies
-        run: pip install mccabe
-      - name: Run McCabe
-        run: find src -name "*.py" -exec python -m mccabe {} \;
-
   docs:
     name: Documentation
     runs-on: ubuntu-latest

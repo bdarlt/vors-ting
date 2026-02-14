@@ -1,11 +1,10 @@
 Formatting: ruff
 Typing: pyright
-Linting: ruff
+Linting: ruff (includes complexity analysis via C901)
 Import Sorting: ruff
 Testing: pytest
 Documentation Generator: mkdocs with mkdocstrings
 Security Scanner: bandit
 Dependency Management: dependabot
-Complexity Analysis: mccabe
 Package Management: uv
 

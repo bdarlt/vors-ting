@@ -21,7 +21,7 @@ _embedding_model: SentenceTransformer | None = None
 
 def _get_embedding_model() -> SentenceTransformer:
     """Get or initialize the embedding model."""
-    global _embedding_model  # noqa: PLW0603 - lazy singleton pattern
+    global _embedding_model  # noqa: PLW0603
     if _embedding_model is None:
         # Use a lightweight model good for semantic similarity
         _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")

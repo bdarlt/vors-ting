@@ -9,7 +9,7 @@ from litellm import completion
 class BaseAgent(ABC):
     """Abstract base class for all agents."""
 
-    def __init__(  # noqa: PLR0913 - agent config requires these args
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         role: str,

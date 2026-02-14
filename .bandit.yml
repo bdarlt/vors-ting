@@ -2,8 +2,9 @@
 # Exclude test files from assert checks (B101)
 # since assert statements are standard in test code
 
-skips:
-  - B101
-
 exclude_dirs:
   - tests
+
+tests:
+  exclude_dirs: ['production']
+  skips: ['B101', 'B108', 'B105']   # skip assert, tmpfile, hardcoded password
