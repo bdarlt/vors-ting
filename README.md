@@ -9,7 +9,6 @@
 [![Pyright](https://img.shields.io/badge/type--checked-pyright-blue)](https://github.com/microsoft/pyright)
 [![pytest](https://img.shields.io/badge/tested_with-pytest-blue)](https://docs.pytest.org/)
 [![Bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-[![McCabe](https://img.shields.io/badge/complexity-mccabe-orange)](https://github.com/PyCQA/mccabe)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://www.mkdocs.org/)
 
 Vörs ting is a multi‑agent workflow tool for iterative feedback loops that drive convergent (and optionally divergent) refinement of work products. Inspired by the Norse goddess **Vör**, from whom nothing can be hidden, and the ancient ***ting*** assembly, it orchestrates AI agents to critique, debate, and improve artifacts until wisdom is reached.
@@ -21,8 +20,9 @@ Vörs ting is a multi‑agent workflow tool for iterative feedback loops that dr
   - [Description](#description)
   - [Installation](#installation)
   - [Usage](#usage)
-    - [Basic Dyadic Pattern (Creator + Skeptic)](#basic-dyadic-pattern-creator--skeptic)
-    - [Polyadic Pattern (Multiple Creators)](#polyadic-pattern-multiple-creators)
+    - [Quick Start](#quick-start)
+    - [Command Reference](#command-reference)
+    - [Agent Patterns](#agent-patterns)
   - [Configuration](#configuration)
   - [Contributing](#contributing)
   - [License](#license)
@@ -36,7 +36,7 @@ Vörs ting is a Python-based scaffolding that automates structured, multi-agent 
 
 ## Installation
 
-**Prerequisites:** Python 3.10 or higher and `pip`.
+**Prerequisites:** Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
 1.  **Clone the repository:**
     ```bash
@@ -44,51 +44,103 @@ Vörs ting is a Python-based scaffolding that automates structured, multi-agent 
     cd vors-ting
     ```
 
-2.  **Install the package and dependencies:**
-    It's recommended to use a virtual environment.
+2.  **Install the package:**
     ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    pip install -e .
+    uv sync
+    ```
+
+3.  **Set up API keys:**
+    Vörs ting uses LiteLLM to connect to LLM providers. Set your API keys as environment variables:
+    ```bash
+    export ANTHROPIC_API_KEY="your-key-here"
+    export OPENAI_API_KEY="your-key-here"
+    export GOOGLE_API_KEY="your-key-here"
     ```
 
 ## Usage
 
-Vörs ting is controlled via a command-line interface (CLI) using a YAML configuration file.
+Vörs ting runs via CLI with a YAML configuration file.
 
-### Basic Dyadic Pattern (Creator + Skeptic)
+### Quick Start
 
-1.  Create a configuration file, e.g., `my_review.yaml`.
-2.  Run the tool:
-    ```bash
-    vors run my_review.yaml
+1.  **Create a config file** (`my_review.yaml`):
+    ```yaml
+    task: "Write an ADR for migrating from REST to GraphQL"
+    artifact_type: "adr"
+    agents:
+      - name: "Creator"
+        role: "creator"
+        model: "claude-3-opus-20240229"
+        provider: "anthropic"
+      - name: "Skeptic"
+        role: "reviewer"
+        model: "gemini-1.5-pro"
+        provider: "google"
+    rounds: 5
+    mode: "converge"
     ```
 
-### Polyadic Pattern (Multiple Creators)
+2.  **Run it:**
+    ```bash
+    uv run vors run my_review.yaml
+    ```
 
-To have multiple agents create and review each other's work, define them all as `creator` in your config. The orchestrator will automatically handle the peer review rounds.
+3.  **View output:**
+    Results are saved to `output/` by default (or specify with `--output dir/`).
 
-For detailed examples, see the `examples/` directory in this repository.
+### Command Reference
+
+```bash
+# Basic run
+uv run vors run config.yaml
+
+# Specify output directory
+uv run vors run config.yaml --output ./results
+
+# Run example configs
+uv run vors run examples/simple_config.yaml
+uv run vors run examples/polyadic_config.yaml
+```
+
+### Agent Patterns
+
+**Dyadic (Creator + Reviewer):** One creator writes, one reviewer critiques (default).
+
+**Polyadic (Multiple Creators):** Multiple creators write independently, then review each other's work. Define multiple agents with `role: creator`.
 
 ## Configuration
 
-The tool is configured via a YAML file. Below is a minimal example. For a full reference of all options (rubrics, safeguards, divergence mode, etc.), please see the [Configuration Guide](docs/configuration.md).
+See `examples/` for complete config files. Key options:
 
 ```yaml
-task: "Write an ADR for migrating from REST to GraphQL"
-artifact_type: "adr"
+task: "What you want the agents to create"
+artifact_type: "adr"  # adr | test | doc | cursor-rules | meeting | generic
+
 agents:
   - name: "Creator1"
-    role: "creator"
+    role: "creator"      # creator | reviewer | curator
     model: "claude-3-opus-20240229"
-    provider: "anthropic"
+    provider: "anthropic"  # LiteLLM provider name
+    temperature: 0.7
   - name: "Skeptic"
     role: "reviewer"
     model: "gemini-1.5-pro"
     provider: "google"
-rounds: 5
-mode: "converge"
+
+rounds: 5              # Maximum iterations
+mode: "converge"       # converge | diverge
+
+convergence:
+  similarity_threshold: 0.95  # Stop early if artifacts are similar enough
+
+rubric:                # Optional evaluation criteria
+  criteria:
+    - name: "Accuracy"
+      weight: 0.4
+      guidelines: "Check facts against known sources"
 ```
+
+For full configuration reference, see [Configuration Guide](docs/configuration.md).
 
 ## Contributing
 

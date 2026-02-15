@@ -19,6 +19,7 @@ dependencies = [
     "pyright>=1.1.408",
     "mkdocs>=1.6.1",
     "mkdocstrings>=1.0.3",
+    "semgrep>=1.151.0",
 ]
 
 [project.optional-dependencies]
