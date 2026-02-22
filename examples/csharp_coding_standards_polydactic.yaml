@@ -7,23 +7,23 @@ artifact_type: "doc"
 agents:
   - name: "BestPractices"
     role: "creator"
-    model: "devstral-latest"
-    provider: "mistral"
-    temperature: 0.2
+    model: "deepseek-reasoner"
+    provider: "deepseek"
+    temperature: 0.0
     file: "examples/csharp_coding_standards_bestPractices.md"
 
   - name: "Functional"
     role: "creator"
     model: "kimi-k2.5"
     provider: "moonshot"
-    temperature: 0.2
+    temperature: 1.0
     file: "examples/csharp_coding_standards_functional.md"
 
   - name: "SecuritySOC2"
     role: "creator"
     model: "kimi-k2.5"
     provider: "moonshot"
-    temperature: 0.2
+    temperature: 1.0
     file: "examples/csharp_coding_standards_security_soc2.md"
 
 rounds: 3

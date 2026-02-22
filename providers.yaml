@@ -81,8 +81,8 @@ providers:
     api_key_env: "MOONSHOT_API_KEY"
     base_url_env: null
     temperature:
-      min: 0.0
-      max: 2.0
+      min: 1.0
+      max: 1.0
     docs_url: "https://docs.litellm.ai/docs/providers/moonshot"
     supports_streaming: True
     notes: "Kimi models including kimi-k2.5"
