@@ -1,10 +1,71 @@
 """Configuration loading and validation for Vörs ting."""
 
+import os
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
+
+# Load provider metadata at module level
+# providers.yaml is at project root (one level above src/)
+PROVIDERS_FILE = Path(__file__).parent.parent.parent.parent / "providers.yaml"
+_PROVIDER_METADATA: dict[str, Any] | None = None
+
+
+def get_provider_metadata() -> dict[str, Any]:
+    """Load provider metadata from providers.yaml."""
+    global _PROVIDER_METADATA  # noqa: PLW0603
+    if _PROVIDER_METADATA is None:
+        if PROVIDERS_FILE.exists():
+            with PROVIDERS_FILE.open("r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                _PROVIDER_METADATA = data.get("providers", {})
+        else:
+            _PROVIDER_METADATA = {}
+    return _PROVIDER_METADATA
+
+
+def validate_provider(provider: str, temperature: float) -> list[str]:
+    """Validate provider and temperature against metadata.
+
+    Returns a list of warning messages.
+    """
+    warnings = []
+    metadata = get_provider_metadata()
+
+    if not provider:
+        # Using full model string format, skip provider-specific validation
+        return warnings
+
+    provider_key = provider.lower()
+
+    if provider_key not in metadata:
+        warnings.append(
+            f"Unknown provider '{provider}'. "
+            "Add to providers.yaml for validation."
+        )
+        return warnings
+
+    provider_info = metadata[provider_key]
+
+    # Check temperature range
+    temp_range = provider_info.get("temperature", {})
+    temp_min = temp_range.get("min", 0.0)
+    temp_max = temp_range.get("max", 2.0)
+
+    if temperature < temp_min or temperature > temp_max:
+        warnings.append(
+            f"Temperature {temperature} outside recommended range "
+            f"[{temp_min}, {temp_max}] for {provider}"
+        )
+
+    # Check API key
+    api_key_env = provider_info.get("api_key_env")
+    if api_key_env and api_key_env not in os.environ:
+        warnings.append(f"API key env var '{api_key_env}' not set for {provider}")
+
+    return warnings
 
 
 class AgentConfig(BaseModel):
@@ -13,9 +74,35 @@ class AgentConfig(BaseModel):
     name: str
     role: str  # creator, reviewer, curator
     model: str
-    provider: str
+    provider: str | None = None
     temperature: float = 0.2
     system_prompt: str | None = None
+    file: str | None = None  # External prompt file
+
+    TEMP_MAX: ClassVar[float] = 5.0
+
+    @field_validator("temperature")
+    @classmethod
+    def validate_temperature(cls, v: float) -> float:
+        """Ensure temperature is within reasonable bounds."""
+        if v < 0 or v > cls.TEMP_MAX:
+            msg = f"Temperature must be between 0 and {cls.TEMP_MAX}"
+            raise ValueError(msg)
+        return v
+
+    def model_post_init(self, _context: Any, /) -> None:
+        """Load system prompt from file if specified."""
+        if self.file and not self.system_prompt:
+            file_path = Path(self.file)
+            if not file_path.is_absolute():
+                # Resolve relative to CWD
+                file_path = Path.cwd() / file_path
+
+            if file_path.exists():
+                self.system_prompt = file_path.read_text(encoding="utf-8")
+            else:
+                msg = f"Prompt file not found: {self.file}"
+                raise ValueError(msg)
 
 
 class RubricCriterion(BaseModel):
@@ -102,10 +189,39 @@ class Config(BaseModel):
             raise ValueError(error_msg)
         return v
 
+    def validate_providers(self) -> list[str]:
+        """Validate all agent providers and return warnings."""
+        warnings: list[str] = []
+        for agent in self.agents:
+            agent_warnings = validate_provider(
+                agent.provider or "", agent.temperature
+            )
+            warnings.extend(f"[{agent.name}] {w}" for w in agent_warnings)
+        return warnings
 
-def load_config(config_path: Path) -> Config:
-    """Load configuration from YAML file."""
+
+def load_config(config_path: Path, verbose: bool = True) -> Config:
+    """Load configuration from YAML file.
+
+    Args:
+        config_path: Path to YAML configuration file
+        verbose: Whether to print validation warnings
+
+    Returns:
+        Config object
+
+    """
     with config_path.open(encoding="utf-8") as f:
         config_data = yaml.safe_load(f)
 
-    return Config(**config_data)
+    config = Config(**config_data)
+
+    # Validate providers and show warnings
+    if verbose:
+        warnings = config.validate_providers()
+        for warning in warnings:
+            print(f"WARN: {warning}")  # noqa: T201
+        if warnings:
+            print()  # noqa: T201  # Extra newline after warnings
+
+    return config

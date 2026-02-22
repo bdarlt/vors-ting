@@ -1,0 +1,192 @@
+# LiteLLM Provider Configuration
+# Auto-generated metadata for LLM provider validation and documentation
+# Last updated: 2026-02-22
+
+providers:
+  # Anthropic
+  anthropic:
+    name: "Anthropic"
+    api_key_env: "ANTHROPIC_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 1.0
+    docs_url: "https://docs.litellm.ai/docs/providers/anthropic"
+    supports_streaming: True
+    notes: "Claude models. max_tokens required."
+
+  # OpenAI
+  openai:
+    name: "OpenAI"
+    api_key_env: "OPENAI_API_KEY"
+    base_url_env: "OPENAI_API_BASE"
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/openai"
+    supports_streaming: True
+    notes: "GPT-4, GPT-3.5. Set OPENAI_API_BASE for Azure OpenAI."
+
+  # Azure OpenAI
+  azure:
+    name: "Azure OpenAI"
+    api_key_env: "AZURE_API_KEY"
+    base_url_env: "AZURE_API_BASE"
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/azure"
+    supports_streaming: True
+    notes: "Requires AZURE_API_VERSION. Use azure/ prefix."
+
+  # Google AI Studio
+  google:
+    name: "Google AI Studio"
+    api_key_env: "GEMINI_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/gemini"
+    supports_streaming: True
+    notes: "Also accepts GOOGLE_API_KEY."
+
+  # Vertex AI
+  vertex_ai:
+    name: "Vertex AI"
+    api_key_env: "GOOGLE_APPLICATION_CREDENTIALS"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/vertex"
+    supports_streaming: True
+    notes: "Path to service account JSON file."
+
+  # Mistral AI
+  mistral:
+    name: "Mistral AI"
+    api_key_env: "MISTRAL_API_KEY"
+    base_url_env: "MISTRAL_API_BASE"
+    temperature:
+      min: 0.0
+      max: 1.0
+    docs_url: "https://docs.litellm.ai/docs/providers/mistral"
+    supports_streaming: True
+    notes: "Includes devstral-latest, codestral. Use 0.2 temperature with devstral"
+
+  # Moonshot
+  moonshot:
+    name: "Moonshot"
+    api_key_env: "MOONSHOT_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/moonshot"
+    supports_streaming: True
+    notes: "Kimi models including kimi-k2.5"
+
+  # DeepSeek
+  deepseek:
+    name: "DeepSeek"
+    api_key_env: "DEEPSEEK_API_KEY"
+    base_url_env: "DEEPSEEK_API_BASE"
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/deepseek"
+    supports_streaming: True
+    notes: "Cost-effective alternative."
+
+  # Cohere
+  cohere:
+    name: "Cohere"
+    api_key_env: "COHERE_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 5.0
+    docs_url: "https://docs.litellm.ai/docs/providers/cohere"
+    supports_streaming: True
+    notes: "Command and Embed models."
+
+  # Together AI
+  together_ai:
+    name: "Together AI"
+    api_key_env: "TOGETHERAI_API_KEY"
+    base_url_env: "TOGETHERAI_API_BASE"
+    temperature:
+      min: 0.0
+      max: 5.0
+    docs_url: "https://docs.litellm.ai/docs/providers/togetherai"
+    supports_streaming: True
+    notes: "Open-source models hosted."
+
+  # Groq
+  groq:
+    name: "Groq"
+    api_key_env: "GROQ_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/groq"
+    supports_streaming: True
+    notes: "Fast inference for open-source models."
+
+  # Fireworks AI
+  fireworks_ai:
+    name: "Fireworks AI"
+    api_key_env: "FIREWORKS_AI_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/fireworks"
+    supports_streaming: True
+    notes: "Use fireworks_ai/ prefix."
+
+  # Perplexity
+  perplexity:
+    name: "Perplexity"
+    api_key_env: "PERPLEXITYAI_API_KEY"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/perplexity"
+    supports_streaming: True
+    notes: "Sonar models with search."
+
+  # OpenRouter
+  openrouter:
+    name: "OpenRouter"
+    api_key_env: "OPENROUTER_API_KEY"
+    base_url_env: "OPENROUTER_API_BASE"
+    temperature:
+      min: 0.0
+      max: 2.0
+    docs_url: "https://docs.litellm.ai/docs/providers/openrouter"
+    supports_streaming: True
+    notes: "Unified API for many models."
+
+  # AWS Bedrock
+  bedrock:
+    name: "AWS Bedrock"
+    api_key_env: "AWS_ACCESS_KEY_ID"
+    base_url_env: null
+    temperature:
+      min: 0.0
+      max: 1.0
+    docs_url: "https://docs.litellm.ai/docs/providers/bedrock"
+    supports_streaming: True
+    notes: "Also needs AWS_SECRET_ACCESS_KEY and AWS_REGION."
+
+# Default values for unknown providers
+defaults:
+  temperature:
+    min: 0.0
+    max: 2.0
+  api_key_env: "{PROVIDER}_API_KEY"
+  base_url_env: null

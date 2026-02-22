@@ -38,8 +38,8 @@ def run(
 
     Use --quiet to suppress verbose output.
     """
-    # Load configuration
-    config = load_config(config_path)
+    # Load configuration (suppress warnings in quiet mode)
+    config = load_config(config_path, verbose=not quiet)
 
     # Create orchestrator
     orchestrator = Orchestrator(config, quiet=quiet)
