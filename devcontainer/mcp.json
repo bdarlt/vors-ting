@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "url": "http://thinking-tool:8080/sse"
+    },
+    "memory-bank": {
+      "url": "http://memory-bank:8080/sse"
+    },
+    "beads": {
+      "url": "http://beads:8080/sse"
+    }
+  }
+}

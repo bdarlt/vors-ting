@@ -1,0 +1,24 @@
+# Use the official Astral uv image (Python 3.13)
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+
+# Install essential system tools for the agent's shell mode
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pre-install Kimi CLI as a global tool
+RUN uv tool install --python 3.13 kimi-cli
+
+# Set the working directory
+WORKDIR /workspace
+
+# Add uv tool bin to PATH so 'kimi' works immediately
+ENV PATH="/root/.local/bin/:$PATH"
+
+# Global git fix for container volume ownership
+RUN git config --global --add safe.directory /workspace
+
+# Launch Kimi with your local MCP config
+ENTRYPOINT ["kimi", "--mcp-config-file", "/workspace/mcp.json"]

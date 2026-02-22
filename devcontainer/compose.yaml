@@ -1,0 +1,60 @@
+services:
+  # The Brain
+  kimi-agent:
+    build: 
+      context: . # Looks for Dockerfile in the devcontainer folder
+    image: my-kimi-agent:latest
+    volumes:
+      - ..:/workspace:Z # Mounts the ACTUAL project root (parent folder)
+      - ~/.config/kimi-cli:/root/.config/kimi-cli:Z
+    # Point to the mcp.json inside this folder
+    entrypoint: ["kimi", "--mcp-config-file", "/workspace/devcontainer/mcp.json"]
+    stdin_open: true
+    tty: true
+    networks:
+      - mcp-net
+
+  # Memory Bank
+  memory-bank:
+    image: node:22-slim
+    volumes:
+      - ..:/workspace:Z
+    working_dir: /workspace
+    command: ["npx", "-y", "@modelcontextprotocol/server-bridge", "--port", "8080", "npx", "-y", "@alioshr/memory-bank-mcp"]
+    networks:
+      - mcp-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  # Beads
+  beads:
+    image: golang:1.26-bookworm
+    volumes:
+      - ..:/workspace:Z
+      - ./install.sh:/tmp/install.sh:Z # Local to devcontainer folder
+    working_dir: /workspace
+    command: >
+      sh -c "apt-get update && apt-get install -y git curl && 
+      chmod +x /tmp/install.sh && /tmp/install.sh && 
+      npx -y @modelcontextprotocol/server-bridge --port 8080 beads-mcp"
+    networks:
+      - mcp-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Sequential Thinking
+  thinking-tool:
+    image: docker.io/mcp/sequential-thinking
+    networks:
+      - mcp-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
+
+networks:
+  mcp-net:
