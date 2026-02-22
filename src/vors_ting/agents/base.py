@@ -50,8 +50,11 @@ class BaseAgent(ABC):
         if prompt:
             messages.append({"role": "user", "content": prompt})
 
+        # Use provider/model format if provider specified, else model only
+        model_str = f"{self.provider}/{self.model}" if self.provider else self.model
+
         response = completion(
-            model=self.model,
+            model=model_str,
             messages=messages,
             temperature=self.temperature,
             **kwargs,

@@ -4,14 +4,21 @@ from pathlib import Path
 
 import typer
 
-from .core.config import load_config
-from .orchestration.orchestrator import Orchestrator
+from vors_ting.core.config import load_config
+from vors_ting.orchestration.orchestrator import Orchestrator
 
-app = typer.Typer()
+app = typer.Typer(
+    help="Vors ting - Multi-agent workflow tool for iterative feedback loops"
+)
 
-CONFIG_PATH_ARG = typer.Argument(..., help="Path to configuration file")
+CONFIG_PATH_ARG = typer.Argument(
+    ..., help="Path to YAML configuration file"
+)
 OUTPUT_DIR_OPTION = typer.Option(
     None, "--output", "-o", help="Output directory for results"
+)
+QUIET_OPTION = typer.Option(
+    False, "--quiet", "-q", help="Suppress verbose output (only show summary)"
 )
 
 
@@ -19,13 +26,23 @@ OUTPUT_DIR_OPTION = typer.Option(
 def run(
     config_path: Path = CONFIG_PATH_ARG,
     output_dir: Path | None = OUTPUT_DIR_OPTION,
+    quiet: bool = QUIET_OPTION,
 ) -> None:
-    """Run Vörs ting with the given configuration."""
+    """Run Vors ting with the given YAML configuration.
+
+    In verbose mode (default), shows progress including:
+    - LLM connection status
+    - Agent prompts and responses
+    - First 4 lines of each response preview
+    - Convergence status
+
+    Use --quiet to suppress verbose output.
+    """
     # Load configuration
     config = load_config(config_path)
 
     # Create orchestrator
-    orchestrator = Orchestrator(config)
+    orchestrator = Orchestrator(config, quiet=quiet)
 
     # Run the feedback loop
     result = orchestrator.run()
@@ -33,11 +50,13 @@ def run(
     # Save results
     if output_dir:
         orchestrator.save_state(output_dir)
-        typer.echo(f"Results saved to {output_dir}")
+        if not quiet:
+            typer.echo(f"Results saved to {output_dir}")
 
     # Print summary
-    typer.echo(f"Status: {result['status']}")
-    typer.echo(f"Completed {orchestrator.current_round} rounds")
+    if not quiet:
+        typer.echo(f"\nStatus: {result['status']}")
+        typer.echo(f"Completed {orchestrator.current_round} rounds")
 
 
 if __name__ == "__main__":

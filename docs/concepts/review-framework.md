@@ -4,6 +4,14 @@
 Brief intro: "This framework defines the types of feedback agents can provide 
 and the interaction patterns they use to deliver it."
 
+```text
+Review Type (WHAT feedback)
+    ↓
+Interaction Pattern (HOW agents engage)
+    ↓
+Communication Style (TONE of delivery)
+```
+
 ## 2. Review Types
 
 Table 1: Review Types (What kind of feedback)
@@ -17,6 +25,19 @@ Table 1: Review Types (What kind of feedback)
 |Comparative|How does this relate to X?|Positioning, differentiation|Market analysis, prior art|
 |Meta-Review|Is this feedback useful?|Assessment of review quality|Quality control, escalation|
 |Synthesis|Which path forward?|Decision with rationale|Convergence, adjudication|
+
+### Missing review types
+
+Second-order implications - Downstream consequences
+Constraint violations - Flags where work breaks requirements
+Optimization proposals - Concrete improvements with tradeoffs
+Alternative generation - Parallel versions, not just critique
+
+### Missing output descriptions
+
+- Format (structured rubric scores, prose, ranked list)
+- Actionability (specific next steps vs. general observations)
+- Scope (architectural vs. implementation-level)
 
 ### 2.1 Type Descriptions
 Expand each review type with:
@@ -52,21 +73,63 @@ Table 3: Communication Styles
 |Collaborative|Supportive, building|"What if we...", "Have you considered...", "This reminds me of..."|Ideation, team building, early exploration|Compliance, when objectivity required|
 |Neutral|Factual, observational|"Observation:", "Data shows...", "Metric X is Y"|Technical documentation, audits, objective assessment|When emotional buy-in matters|
 
-## 4. Combination Matrix
+### Configuration Option Ideas
+
+Some possible ways of incorporating communication style.
+
+#### per Agent
+
+Was already informally considering communication style with agent selection. Should be formalized.
+
+```yaml
+agents:
+  - name: "Skeptic"
+    role: "reviewer"
+    model: "codex"
+    communication_style: "adversarial"  # NEW
+    temperature: 0.2
+    
+  - name: "Builder"
+    role: "creator"
+    model: "claude-opus"
+    communication_style: "collaborative"  # NEW
+    temperature: 0.7
+```
+
+#### Default Per run
+
+```yaml
+task: "Security review of authentication flow"
+default_communication_style: "adversarial"  # high stakes, need harsh truth
+```
+
+#### Per Review Type
+
+```yaml
+review_types:
+  critique:
+    style: "adversarial"  # be harsh
+  probing:
+    style: "collaborative"  # be curious, not accusatory
+  synthesis:
+    style: "neutral"  # be objective
+```
+
+## 5. Combination Matrix
 [NEW: Shows which review types work well in which patterns]
 
 Example:
-| Review Type | Dyadic | Polyadic | Parallel | Layered | Moderated |
-|-------------|--------|----------|----------|---------|-----------|
-| Critique | ⭐⭐⭐ | ⭐⭐ | ⭐ | ⭐⭐⭐ | ⭐⭐ |
-| Stress Test | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐ | ⭐⭐ |
-| Comparative | ⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐ | ⭐⭐⭐ |
-| Meta-Review | ⭐ | ⭐⭐ | - | ⭐⭐⭐ | ⭐⭐ |
+Three-Way Combination Guide
 
-⭐⭐⭐ = Ideal fit
-⭐⭐ = Works well
-⭐ = Possible but suboptimal
-- = Not applicable
+### 5.1 Critique + Dyadic + [Style]
+- **Adversarial:** Classic code review, finds flaws fast, can demoralize
+- **Collaborative:** Pair programming style, slower but builds skills
+- **Neutral:** Technical audit, objective but may miss context
+
+### 5.2 Probing + Polyadic + [Style]
+- **Adversarial:** Hard questions expose assumptions fast
+- **Collaborative:** Socratic method, educational, takes time
+- **Neutral:** Survey-style, gathers data without bias
 
 ## 5. Configuration Examples
 Show YAML snippets for common scenarios:
@@ -91,6 +154,30 @@ C. Anti-patterns (common mistakes)
 - **With examples:** 8-10 pages
 
 The tables should be **extractable** - someone should be able to print just sections 2 and 3 (the two tables) as a desk reference, but the full document provides the depth.
+
+## What's Actually Missing
+### From Vörs ting design:
+
+- Triage - Classify disagreements (factual/value/semantic)
+- Convergence detection - Are we done? (similarity/consensus/hybrid)
+- Dependency flagging - Points out bottlenecks for downstream work
+- Uncertainty quantification - Explicit confidence levels
+- Completeness audit - Systematic check against spec
+
+### From your agent conversations:
+
+- Comparative analysis - Place work alongside similar efforts
+- Reframing - Show from different perspective/discipline
+- Steelman then challenge - Strongest version + where it still breaks
+- Consistency mapping - Internal contradictions
+
+### From real-world review processes:
+
+- Security review - Threat modeling, attack vectors
+- Performance review - Bottlenecks, scalability issues
+- Accessibility review - WCAG compliance, usability
+- Legal/compliance review - Regulatory requirements
+- Cost analysis - Resource implications
 
 ## Alternative: Modular Approach
 

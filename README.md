@@ -11,7 +11,11 @@
 [![Bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://www.mkdocs.org/)
 
-Vörs ting is a multi‑agent workflow tool for iterative feedback loops that drive convergent (and optionally divergent) refinement of work products. Inspired by the Norse goddess **Vör**, from whom nothing can be hidden, and the ancient ***ting*** assembly, it orchestrates AI agents to critique, debate, and improve artifacts until wisdom is reached.
+Vörs ting is a multi‑agent workflow tool for iterative feedback loops that drive
+convergent (and optionally divergent) refinement of work products. Inspired by
+the Norse goddess **Vör**, from whom nothing can be hidden, and the ancient
+***ting*** assembly, it orchestrates AI agents to critique, debate, and improve
+artifacts until wisdom is reached.
 
 ## Table of Contents
 
@@ -55,6 +59,9 @@ Vörs ting is a Python-based scaffolding that automates structured, multi-agent 
     export ANTHROPIC_API_KEY="your-key-here"
     export OPENAI_API_KEY="your-key-here"
     export GOOGLE_API_KEY="your-key-here"
+    export MOONSHOT_API_KEY="your-key-here"
+    export DEEPSEEK_API_KEY="your-key-here"
+    export MISTRAL_API_KEY="your-key-here"
     ```
 
 ## Usage
@@ -70,8 +77,8 @@ Vörs ting runs via CLI with a YAML configuration file.
     agents:
       - name: "Creator"
         role: "creator"
-        model: "claude-3-opus-20240229"
-        provider: "anthropic"
+        model: "kimi-k2.5"
+        provider: "moonshot"
       - name: "Skeptic"
         role: "reviewer"
         model: "gemini-1.5-pro"
@@ -91,8 +98,13 @@ Vörs ting runs via CLI with a YAML configuration file.
 ### Command Reference
 
 ```bash
-# Basic run
+# Basic run (verbose output shows LLM calls, feedback, previews)
 uv run vors run config.yaml
+
+# Quiet mode (suppress verbose output)
+uv run vors run config.yaml --quiet
+# or
+uv run vors run config.yaml -q
 
 # Specify output directory
 uv run vors run config.yaml --output ./results
@@ -100,6 +112,9 @@ uv run vors run config.yaml --output ./results
 # Run example configs
 uv run vors run examples/simple_config.yaml
 uv run vors run examples/polyadic_config.yaml
+
+# Using main.py entry point
+uv run python main.py run config.yaml
 ```
 
 ### Agent Patterns
@@ -120,8 +135,9 @@ agents:
   - name: "Creator1"
     role: "creator"      # creator | reviewer | curator
     model: "claude-3-opus-20240229"
-    provider: "anthropic"  # LiteLLM provider name
+    provider: "anthropic"  # LiteLLM provider (optional)
     temperature: 0.7
+    file: "prompts/custom.md"  # External system prompt (optional)
   - name: "Skeptic"
     role: "reviewer"
     model: "gemini-1.5-pro"
@@ -138,6 +154,22 @@ rubric:                # Optional evaluation criteria
     - name: "Accuracy"
       weight: 0.4
       guidelines: "Check facts against known sources"
+```
+
+### Model Format
+
+LiteLLM uses `provider/model-name` format. You can specify this two ways:
+
+```yaml
+# Option 1: Separate provider and model (recommended)
+provider: "mistral"
+model: "devstral-latest"
+# Results in: mistral/devstral-latest
+
+# Option 2: Full model string, no provider
+provider: null
+model: "openai/gpt-4"
+# Results in: openai/gpt-4
 ```
 
 For full configuration reference, see [Configuration Guide](docs/configuration.md).

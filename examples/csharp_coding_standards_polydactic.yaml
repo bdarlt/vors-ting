@@ -1,0 +1,62 @@
+# Polyadic configuration for C# Coding Standards
+# Three competing approaches: Best Practices, Functional, Security+SOC2
+
+task: "Create comprehensive C# coding standards document"
+artifact_type: "doc"
+
+agents:
+  - name: "BestPractices"
+    role: "creator"
+    model: "devstral-latest"
+    provider: "mistral"
+    temperature: 0.2
+    file: "examples/csharp_coding_standards_bestPractices.md"
+
+  - name: "Functional"
+    role: "creator"
+    model: "kimi-k2.5"
+    provider: "moonshot"
+    temperature: 0.2
+    file: "examples/csharp_coding_standards_functional.md"
+
+  - name: "SecuritySOC2"
+    role: "creator"
+    model: "kimi-k2.5"
+    provider: "moonshot"
+    temperature: 0.2
+    file: "examples/csharp_coding_standards_security_soc2.md"
+
+rounds: 3
+mode: "converge"
+
+rubric:
+  criteria:
+    - name: "Completeness"
+      weight: 0.3
+      guidelines: "Does it cover naming, patterns, anti-patterns, and practical examples?"
+    - name: "Practicality"
+      weight: 0.25
+      guidelines: "Are the examples realistic and applicable to .NET 10 projects?"
+    - name: "Clarity"
+      weight: 0.25
+      guidelines: "Is the document well-structured with clear DO/DON'T formatting?"
+    - name: "TeamFit"
+      weight: 0.2
+      guidelines: "Does it match the team's tech stack (ASP.NET Core, xUnit, Azure)?"
+
+convergence:
+  method: "similarity"
+  similarity_threshold: 0.85
+  max_rounds: 5
+  triage: true
+
+safeguards:
+  devil_advocate:
+    enabled: true
+    rotation: "round_robin"
+    skip_rate: 0.1
+  rejection_option: true
+
+metrics:
+  log_dir: "metrics/"
+  regret_tracking: true

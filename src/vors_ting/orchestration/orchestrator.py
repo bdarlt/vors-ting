@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from rich.console import Console
 from sentence_transformers import SentenceTransformer
 
 from vors_ting.agents.creator import CreatorAgent
@@ -31,16 +32,39 @@ def _get_embedding_model() -> SentenceTransformer:
 class Orchestrator:
     """Main orchestrator that manages the feedback loop."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, quiet: bool = False) -> None:
         """Initialize the orchestrator with configuration."""
         self.config = config
         self.agents: list[BaseAgent] = []
         self.round_history: list[dict[str, Any]] = []
         self.current_round = 0
+        self.quiet = quiet
+        self.console = Console(quiet=quiet)
+
+    def _log(self, message: str, style: str | None = None) -> None:
+        """Log a message if not in quiet mode."""
+        if not self.quiet:
+            if style:
+                self.console.print(message, style=style)
+            else:
+                self.console.print(message)
+
+    def _preview_text(self, text: str, lines: int = 4) -> str:
+        """Get first N lines of text for preview."""
+        text_lines = text.strip().split("\n")
+        preview_lines = text_lines[:lines]
+        result = "\n".join(preview_lines)
+        if len(text_lines) > lines:
+            result += f"\n... ({len(text_lines) - lines} more lines)"
+        return result
 
     def initialize_agents(self) -> None:
         """Initialize agents based on configuration."""
+        self._log(f"Initializing {len(self.config.agents)} agents...", style="bold blue")
+
         for agent_config in self.config.agents:
+            self._log(f"  Creating {agent_config.role}: {agent_config.name}")
+
             if agent_config.role == "creator":
                 agent = CreatorAgent(
                     name=agent_config.name,
@@ -74,6 +98,8 @@ class Orchestrator:
 
             self.agents.append(agent)
 
+        self._log("Agents initialized.\n", style="green")
+
     def run(self) -> dict[str, Any]:
         """Run the feedback loop."""
         if self.config.mode == "converge":
@@ -86,12 +112,20 @@ class Orchestrator:
         self.initialize_agents()
 
         # Round 0: Initial generation
+        self._log("=" * 50, style="bold")
+        self._log("ROUND 0: Initial Generation", style="bold yellow")
+        self._log("=" * 50, style="bold")
+
         initial_artifacts = self._initial_generation()
         self._log_round(0, {"artifacts": initial_artifacts})
 
         # Subsequent rounds
         for round_num in range(1, self.config.rounds + 1):
             self.current_round = round_num
+
+            self._log("\n" + "=" * 50, style="bold")
+            self._log(f"ROUND {round_num}", style="bold yellow")
+            self._log("=" * 50, style="bold")
 
             # Review phase
             reviews = self._review_phase(initial_artifacts)
@@ -101,6 +135,7 @@ class Orchestrator:
 
             # Check convergence
             if self._check_convergence(initial_artifacts, refined_artifacts):
+                self._log("\n✓ Convergence reached!", style="bold green")
                 self._log_round(
                     round_num,
                     {
@@ -111,12 +146,15 @@ class Orchestrator:
                 )
                 return {"status": "converged", "artifacts": refined_artifacts}
 
+            self._log(f"\nNot converged yet (threshold: {self.config.convergence.similarity_threshold})")
+
             self._log_round(
                 round_num, {"reviews": reviews, "artifacts": refined_artifacts}
             )
 
             initial_artifacts = refined_artifacts
 
+        self._log(f"\nMax rounds ({self.config.rounds}) reached.", style="bold yellow")
         return {"status": "max_rounds_reached", "artifacts": initial_artifacts}
 
     def _run_diverge_mode(self) -> dict[str, Any]:
@@ -130,20 +168,36 @@ class Orchestrator:
         artifacts = []
         for agent in self.agents:
             if agent.role == "creator":
+                self._log(f"\n→ Prompting {agent.name} ({agent.model})", style="cyan")
+                self._log(f"  Task: {self.config.task[:60]}...")
+
                 artifact = agent.generate(self.config.task)
                 artifacts.append(artifact)
+
+                self._log(f"  ✓ Received response from {agent.name}", style="green")
+                self._log(f"  Preview:")
+                self._log(self._preview_text(artifact))
+
         return artifacts
 
     def _review_phase(self, artifacts: list[str]) -> list[dict[str, Any]]:
         """Perform the review phase."""
+        self._log("\n--- Review Phase ---", style="bold magenta")
         reviews = []
-        rubric = self.config.rubric.dict() if self.config.rubric else None
+        rubric = self.config.rubric.model_dump() if self.config.rubric else None
 
         for artifact in artifacts:
             for agent in self.agents:
                 if agent.role == "reviewer":
+                    self._log(f"\n→ Connecting with LLM - {agent.name} ({agent.model})", style="cyan")
+                    self._log(f"  Reviewing artifact...")
+
                     review = agent.review(artifact, rubric)
                     reviews.append(review)
+
+                    self._log(f"  ✓ Feedback received from {agent.name}", style="green")
+                    feedback_preview = self._preview_text(review.get("feedback", ""), lines=3)
+                    self._log(f"  Feedback preview: {feedback_preview[:100]}...")
 
         return reviews
 
@@ -151,6 +205,7 @@ class Orchestrator:
         self, artifacts: list[str], reviews: list[dict[str, Any]]
     ) -> list[str]:
         """Perform the refinement phase."""
+        self._log("\n--- Refinement Phase ---", style="bold magenta")
         refined_artifacts = []
 
         for i, artifact in enumerate(artifacts):
@@ -162,8 +217,15 @@ class Orchestrator:
             # Find a creator to refine
             for agent in self.agents:
                 if agent.role == "creator":
+                    self._log(f"\n→ Prompting {agent.name} to refine artifact", style="cyan")
+                    self._log(f"  Incorporating {len(artifact_reviews)} review(s)...")
+
                     refined = agent.refine(artifact, {"reviews": artifact_reviews})
                     refined_artifacts.append(refined)
+
+                    self._log(f"  ✓ Refined by {agent.name}", style="green")
+                    self._log(f"  Preview:")
+                    self._log(self._preview_text(refined))
                     break
 
         return refined_artifacts

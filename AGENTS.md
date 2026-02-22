@@ -25,7 +25,15 @@ pytest -m "not slow"         # skip slow tests (embedding model)
 ruff check --fix .           # lint + auto-fix
 ruff format .                # format
 pyright                      # type check
-vors run examples/simple.yaml  # run tool
+
+# Run vors (verbose shows LLM calls, feedback, previews)
+uv run vors run examples/simple.yaml
+
+# Run quietly
+uv run vors run examples/simple.yaml -q
+
+# Using main.py entry point
+uv run python main.py run examples/simple.yaml -q
 ```
 
 ### Windows Shell Quirks
@@ -119,8 +127,9 @@ agents:
   - name: "Creator1"
     role: "creator"   # creator | reviewer | curator
     model: "claude-3-opus-20240229"
-    provider: "anthropic"  # LiteLLM provider
+    provider: "anthropic"  # LiteLLM provider (optional)
     temperature: 0.7
+    file: "prompts/custom.md"  # External prompt file (optional)
   - name: "Skeptic"
     role: "reviewer"
     model: "gemini-1.5-pro"
@@ -131,6 +140,12 @@ rubrics:              # Optional evaluation criteria
   clarity: "Is it clear?"
   completeness: "All sections covered?"
 ```
+
+### Model Format
+
+LiteLLM uses `provider/model-name` format:
+- `provider: "mistral"` + `model: "devstral-latest"` → `mistral/devstral-latest`
+- `provider: null` + `model: "openai/gpt-4"` → `openai/gpt-4`
 
 ## Dependencies
 
