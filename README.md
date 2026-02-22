@@ -172,6 +172,19 @@ model: "openai/gpt-4"
 # Results in: openai/gpt-4
 ```
 
+### Rate Limit Handling
+
+Vörs ting automatically handles HTTP 429 (rate limit) errors with:
+- **Retry-After header**: Respects the provider's suggested wait time
+- **Exponential backoff**: 1s, 2s, 4s, 8s, 16s... up to 60s max
+- **Jitter**: Adds 0-20% randomness to prevent thundering herd
+- **5 retries max**: Configurable via `BaseAgent.MAX_RETRIES`
+
+When rate limited, you'll see:
+```
+Rate limited (Creator1). Retrying in 5.2s... (attempt 2/5)
+```
+
 For full configuration reference, see [Configuration Guide](docs/configuration.md).
 
 ## Contributing

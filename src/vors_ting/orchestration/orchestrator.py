@@ -60,7 +60,8 @@ class Orchestrator:
 
     def initialize_agents(self) -> None:
         """Initialize agents based on configuration."""
-        self._log(f"Initializing {len(self.config.agents)} agents...", style="bold blue")
+        agent_count = len(self.config.agents)
+        self._log(f"Initializing {agent_count} agents...", style="bold blue")
 
         for agent_config in self.config.agents:
             self._log(f"  Creating {agent_config.role}: {agent_config.name}")
@@ -146,7 +147,8 @@ class Orchestrator:
                 )
                 return {"status": "converged", "artifacts": refined_artifacts}
 
-            self._log(f"\nNot converged yet (threshold: {self.config.convergence.similarity_threshold})")
+            threshold = self.config.convergence.similarity_threshold
+            self._log(f"\nNot converged yet (threshold: {threshold})")
 
             self._log_round(
                 round_num, {"reviews": reviews, "artifacts": refined_artifacts}
@@ -175,7 +177,7 @@ class Orchestrator:
                 artifacts.append(artifact)
 
                 self._log(f"  ✓ Received response from {agent.name}", style="green")
-                self._log(f"  Preview:")
+                self._log("  Preview:")
                 self._log(self._preview_text(artifact))
 
         return artifacts
@@ -189,14 +191,18 @@ class Orchestrator:
         for artifact in artifacts:
             for agent in self.agents:
                 if agent.role == "reviewer":
-                    self._log(f"\n→ Connecting with LLM - {agent.name} ({agent.model})", style="cyan")
-                    self._log(f"  Reviewing artifact...")
+                    self._log(
+                        f"\n→ Connecting with LLM - {agent.name} ({agent.model})",
+                        style="cyan",
+                    )
+                    self._log("  Reviewing artifact...")
 
                     review = agent.review(artifact, rubric)
                     reviews.append(review)
 
                     self._log(f"  ✓ Feedback received from {agent.name}", style="green")
-                    feedback_preview = self._preview_text(review.get("feedback", ""), lines=3)
+                    feedback_text = review.get("feedback", "")
+                    feedback_preview = self._preview_text(feedback_text, lines=3)
                     self._log(f"  Feedback preview: {feedback_preview[:100]}...")
 
         return reviews
@@ -217,14 +223,17 @@ class Orchestrator:
             # Find a creator to refine
             for agent in self.agents:
                 if agent.role == "creator":
-                    self._log(f"\n→ Prompting {agent.name} to refine artifact", style="cyan")
+                    self._log(
+                        f"\n→ Prompting {agent.name} to refine artifact",
+                        style="cyan",
+                    )
                     self._log(f"  Incorporating {len(artifact_reviews)} review(s)...")
 
                     refined = agent.refine(artifact, {"reviews": artifact_reviews})
                     refined_artifacts.append(refined)
 
                     self._log(f"  ✓ Refined by {agent.name}", style="green")
-                    self._log(f"  Preview:")
+                    self._log("  Preview:")
                     self._log(self._preview_text(refined))
                     break
 
