@@ -316,6 +316,8 @@ class TestYAMLIntegration:
         with patch("vors_ting.orchestration.orchestrator.CreatorAgent") as mock_creator:
             mock_instance = MagicMock()
             mock_instance.role = "creator"
+            mock_instance.name = "Creator"
+            mock_instance.model = "gpt-4"
             mock_instance.generate.return_value = "Generated content"
             mock_instance.refine.return_value = "Refined content"
             mock_creator.return_value = mock_instance
@@ -362,7 +364,7 @@ class TestStatePersistence:
 
         # Check files exist
         assert (output_dir / "round_history.json").exists()
-        assert (output_dir / "artifact_0.txt").exists()
+        assert (output_dir / "artifact_0.md").exists()
 
         # Check content
         with (output_dir / "round_history.json").open() as f:
@@ -370,7 +372,7 @@ class TestStatePersistence:
             assert len(history) == 2
             assert history[1]["converged"] is True
 
-        with (output_dir / "artifact_0.txt").open() as f:
+        with (output_dir / "artifact_0.md").open() as f:
             content = f.read()
             assert content == "Final version of the content."
 

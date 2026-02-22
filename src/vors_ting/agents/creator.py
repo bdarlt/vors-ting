@@ -8,13 +8,28 @@ from .base import BaseAgent
 class CreatorAgent(BaseAgent):
     """Agent that generates content."""
 
-    def generate(self, task: str, context: dict[str, Any] | None = None) -> str:
-        """Generate content based on the task."""
+    def _build_generation_prompt(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> str:
+        """Build the generation prompt (exposed for logging)."""
         prompt = f"Task: {task}"
         if context:
             prompt += f"\n\nContext: {context}"
         prompt += "\n\nPlease generate high-quality content:"
+        return prompt
 
+    def _build_refinement_prompt(
+        self, original: str, feedback: dict[str, Any]
+    ) -> str:
+        """Build the refinement prompt (exposed for logging)."""
+        prompt = f"Original content:\n\n{original}"
+        prompt += f"\n\nFeedback received:\n\n{feedback}"
+        prompt += "\n\nPlease refine the content based on this feedback:"
+        return prompt
+
+    def generate(self, task: str, context: dict[str, Any] | None = None) -> str:
+        """Generate content based on the task."""
+        prompt = self._build_generation_prompt(task, context)
         return self._call_llm(prompt)
 
     def review(
@@ -32,8 +47,5 @@ class CreatorAgent(BaseAgent):
 
     def refine(self, original: str, feedback: dict[str, Any]) -> str:
         """Refine content based on feedback."""
-        prompt = f"Original content:\n\n{original}"
-        prompt += f"\n\nFeedback received:\n\n{feedback}"
-        prompt += "\n\nPlease refine the content based on this feedback:"
-
+        prompt = self._build_refinement_prompt(original, feedback)
         return self._call_llm(prompt)

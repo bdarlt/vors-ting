@@ -58,11 +58,11 @@ def test_curator_agent() -> None:
     assert agent.name == "TestCurator"
     assert agent.role == "curator"
 
-    # Test clustering (placeholder implementation)
-    ideas = ["Idea 1", "Idea 2", "Idea 3"]
-    clusters = agent.cluster_ideas(ideas)
-    assert len(clusters) == 1
-    assert clusters[0] == ideas
+    # Test clustering (mocked)
+    with patch.object(agent, "_call_llm", return_value="Cluster 1: Idea 1, Idea 2"):
+        ideas = ["Idea 1", "Idea 2", "Idea 3"]
+        result = agent.cluster(ideas)
+        assert "clusters" in result
 
 
 def test_agent_rejection() -> None:
