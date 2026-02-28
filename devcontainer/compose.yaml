@@ -50,7 +50,7 @@ services:
 
   # Sequential Thinking
   thinking-tool:
-    image: docker.io/mcp/sequential-thinking
+    image: docker.io/mcp/sequentialthinking
     networks:
       - mcp-net
     healthcheck:

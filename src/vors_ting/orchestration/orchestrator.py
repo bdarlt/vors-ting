@@ -13,6 +13,10 @@ from vors_ting.agents.creator import CreatorAgent
 from vors_ting.agents.curator import CuratorAgent
 from vors_ting.agents.reviewer import ReviewerAgent
 from vors_ting.core.config import Config
+from vors_ting.core.logging import (
+    InMemoryInteractionLogger,
+    InteractionLogger,
+)
 
 if TYPE_CHECKING:
     from vors_ting.agents.base import BaseAgent
@@ -46,8 +50,22 @@ def _get_artifact_extension(artifact_type: str) -> str:
 class Orchestrator:
     """Main orchestrator that manages the feedback loop."""
 
-    def __init__(self, config: Config, quiet: bool = False) -> None:
-        """Initialize the orchestrator with configuration."""
+    def __init__(
+        self,
+        config: Config,
+        quiet: bool = False,
+        interaction_logger: InteractionLogger | None = None,
+    ) -> None:
+        """Initialize the orchestrator with configuration.
+
+        Args:
+            config: The configuration for this run
+            quiet: Suppress verbose console output
+            interaction_logger: Strategy for logging prompt/response interactions.
+                Defaults to InMemoryInteractionLogger for testing.
+                Use StreamingInteractionLogger for real-time file output.
+
+        """
         self.config = config
         self.agents: list[BaseAgent] = []
         self.round_history: list[dict[str, Any]] = []
@@ -56,6 +74,13 @@ class Orchestrator:
         self.console = Console(quiet=quiet)
         self._output_dir: Path | None = None
         self._run_timestamp: str = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
+
+        # Dependency injection for interaction logging strategy
+        if interaction_logger is None:
+            # Default: in-memory (good for testing)
+            self._interaction_logger: InteractionLogger = InMemoryInteractionLogger()
+        else:
+            self._interaction_logger = interaction_logger
 
     def _get_output_dir(self) -> Path:
         """Get or create the output directory."""
@@ -378,22 +403,24 @@ class Orchestrator:
         response: str,
         metadata: dict[str, Any] | None = None,
     ) -> None:
-        """Log a prompt/response interaction."""
-        interaction = {
-            "timestamp": datetime.now(tz=UTC).isoformat(),
-            "round": round_num,
-            "agent_name": agent_name,
-            "agent_role": agent_role,
-            "prompt": prompt,
-            "response": response,
-            "metadata": metadata or {},
-        }
+        """Log a prompt/response interaction using the configured strategy."""
+        result = self._interaction_logger.log_interaction(
+            round_num=round_num,
+            agent_name=agent_name,
+            agent_role=agent_role,
+            prompt=prompt,
+            response=response,
+            metadata=metadata,
+        )
 
-        # Add to round history if not already there
-        if self.round_history:
+        # If in-memory logger, also add to round_history for compatibility
+        if (
+            isinstance(self._interaction_logger, InMemoryInteractionLogger)
+            and self.round_history
+        ):
             if "interactions" not in self.round_history[-1]:
                 self.round_history[-1]["interactions"] = []
-            self.round_history[-1]["interactions"].append(interaction)
+            self.round_history[-1]["interactions"].append(result)
 
     def _auto_save(self) -> Path:
         """Auto-save the current state to the configured log directory."""

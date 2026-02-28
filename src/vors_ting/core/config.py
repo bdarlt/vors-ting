@@ -42,8 +42,7 @@ def validate_provider(provider: str, temperature: float) -> list[str]:
 
     if provider_key not in metadata:
         warnings.append(
-            f"Unknown provider '{provider}'. "
-            "Add to providers.yaml for validation."
+            f"Unknown provider '{provider}'. Add to providers.yaml for validation."
         )
         return warnings
 
@@ -193,9 +192,7 @@ class Config(BaseModel):
         """Validate all agent providers and return warnings."""
         warnings: list[str] = []
         for agent in self.agents:
-            agent_warnings = validate_provider(
-                agent.provider or "", agent.temperature
-            )
+            agent_warnings = validate_provider(agent.provider or "", agent.temperature)
             warnings.extend(f"[{agent.name}] {w}" for w in agent_warnings)
         return warnings
 

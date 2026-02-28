@@ -1,19 +1,19 @@
 """Command-line interface for Vörs ting."""
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import typer
 
 from vors_ting.core.config import load_config
+from vors_ting.core.logging import StreamingInteractionLogger
 from vors_ting.orchestration.orchestrator import Orchestrator
 
 app = typer.Typer(
     help="Vors ting - Multi-agent workflow tool for iterative feedback loops"
 )
 
-CONFIG_PATH_ARG = typer.Argument(
-    ..., help="Path to YAML configuration file"
-)
+CONFIG_PATH_ARG = typer.Argument(..., help="Path to YAML configuration file")
 OUTPUT_DIR_OPTION = typer.Option(
     None, "--output", "-o", help="Output directory for results"
 )
@@ -41,8 +41,16 @@ def run(
     # Load configuration (suppress warnings in quiet mode)
     config = load_config(config_path, verbose=not quiet)
 
-    # Create orchestrator
-    orchestrator = Orchestrator(config, quiet=quiet)
+    # Create orchestrator with streaming logger for CLI usage
+    run_timestamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
+    output_dir = output_dir or Path("metrics") / run_timestamp
+    interaction_logger = StreamingInteractionLogger(
+        output_dir=output_dir / "interactions",
+        quiet=quiet,
+    )
+    orchestrator = Orchestrator(
+        config, quiet=quiet, interaction_logger=interaction_logger
+    )
 
     # Run the feedback loop
     result = orchestrator.run()

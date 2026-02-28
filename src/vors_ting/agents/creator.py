@@ -18,9 +18,7 @@ class CreatorAgent(BaseAgent):
         prompt += "\n\nPlease generate high-quality content:"
         return prompt
 
-    def _build_refinement_prompt(
-        self, original: str, feedback: dict[str, Any]
-    ) -> str:
+    def _build_refinement_prompt(self, original: str, feedback: dict[str, Any]) -> str:
         """Build the refinement prompt (exposed for logging)."""
         prompt = f"Original content:\n\n{original}"
         prompt += f"\n\nFeedback received:\n\n{feedback}"

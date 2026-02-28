@@ -20,17 +20,17 @@ dense, structured, and actionable. Remove fluff, maximize signal.
 ## Fast Check Commands
 
 ```bash
-pytest -x                    # fail fast tests
-pytest -m "not slow"         # skip slow tests (embedding model)
-ruff check --fix .           # lint + auto-fix
-ruff format .                # format
-pyright                      # type check
+uv run pytest -x                    # fail fast tests
+uv run pytest -m "not slow"         # skip slow tests (embedding model)
+uv run ruff check --fix .           # lint + auto-fix
+uv run format                # format
+uv run pyright                      # type check
 
 # Run vors (verbose shows LLM calls, feedback, previews)
-uv run vors run examples/simple.yaml
+uv run vors examples/simple.yaml
 
 # Run quietly
-uv run vors run examples/simple.yaml -q
+uv run vors examples/simple.yaml -q
 
 # Using main.py entry point
 uv run python main.py run examples/simple.yaml -q

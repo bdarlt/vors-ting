@@ -28,12 +28,14 @@ class BaseAgent(ABC):
         system_prompt: str | None = None,
     ) -> None:
         """Initialize the agent."""
-        self.name = name
-        self.role = role
-        self.model = model
-        self.provider = provider
-        self.temperature = temperature
-        self.system_prompt = system_prompt or self._get_default_system_prompt()
+        self.name: str = name
+        self.role: str = role
+        self.model: str = model
+        self.provider: str = provider
+        self.temperature: float = temperature
+        self.system_prompt: str | None = (
+            system_prompt or self._get_default_system_prompt()
+        )
 
     def _get_default_system_prompt(self) -> str:
         """Get the default system prompt based on agent role."""
@@ -124,7 +126,7 @@ class BaseAgent(ABC):
 
                 if retry_after is not None:
                     # Use provider's suggested wait time
-                    delay = min(retry_after, self.MAX_DELAY)
+                    delay: float = min(retry_after, self.MAX_DELAY)
                 else:
                     # Exponential backoff with jitter
                     delay = min(
