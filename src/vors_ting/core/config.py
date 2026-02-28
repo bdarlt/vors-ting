@@ -4,26 +4,29 @@ import os
 from pathlib import Path
 from typing import Any, ClassVar
 
+from typing_extensions import override
+
 import yaml
 from pydantic import BaseModel, Field, field_validator
 
 # Load provider metadata at module level
 # providers.yaml is at project root (one level above src/)
 PROVIDERS_FILE = Path(__file__).parent.parent.parent.parent / "providers.yaml"
-_PROVIDER_METADATA: dict[str, Any] | None = None
+_provider_metadata: dict[str, Any] | None = None
 
 
 def get_provider_metadata() -> dict[str, Any]:
     """Load provider metadata from providers.yaml."""
-    global _PROVIDER_METADATA  # noqa: PLW0603
-    if _PROVIDER_METADATA is None:
+    global _provider_metadata  # noqa: PLW0603
+    if _provider_metadata is None:
         if PROVIDERS_FILE.exists():
             with PROVIDERS_FILE.open("r", encoding="utf-8") as f:
-                data = yaml.safe_load(f) or {}
-                _PROVIDER_METADATA = data.get("providers", {})
+                data: dict[str, Any] = yaml.safe_load(f) or {}
+                providers = data.get("providers", {})
+                _provider_metadata = providers if isinstance(providers, dict) else {}
         else:
-            _PROVIDER_METADATA = {}
-    return _PROVIDER_METADATA
+            _provider_metadata = {}
+    return _provider_metadata
 
 
 def validate_provider(provider: str, temperature: float) -> list[str]:
@@ -31,7 +34,7 @@ def validate_provider(provider: str, temperature: float) -> list[str]:
 
     Returns a list of warning messages.
     """
-    warnings = []
+    warnings: list[str] = []
     metadata = get_provider_metadata()
 
     if not provider:
@@ -54,10 +57,11 @@ def validate_provider(provider: str, temperature: float) -> list[str]:
     temp_max = temp_range.get("max", 2.0)
 
     if temperature < temp_min or temperature > temp_max:
-        warnings.append(
+        msg = (
             f"Temperature {temperature} outside recommended range "
-            f"[{temp_min}, {temp_max}] for {provider}"
+            + f"[{temp_min}, {temp_max}] for {provider}"
         )
+        warnings.append(msg)
 
     # Check API key
     api_key_env = provider_info.get("api_key_env")
@@ -89,7 +93,8 @@ class AgentConfig(BaseModel):
             raise ValueError(msg)
         return v
 
-    def model_post_init(self, _context: Any, /) -> None:
+    @override
+    def model_post_init(self, _context: object, /) -> None:
         """Load system prompt from file if specified."""
         if self.file and not self.system_prompt:
             file_path = Path(self.file)
@@ -209,7 +214,7 @@ def load_config(config_path: Path, verbose: bool = True) -> Config:
 
     """
     with config_path.open(encoding="utf-8") as f:
-        config_data = yaml.safe_load(f)
+        config_data: dict[str, Any] = yaml.safe_load(f) or {}
 
     config = Config(**config_data)
 
