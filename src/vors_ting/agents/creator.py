@@ -1,6 +1,6 @@
 """Creator agent implementation."""
 
-from typing import Any
+from typing import Any, override
 
 from .base import BaseAgent
 
@@ -25,11 +25,15 @@ class CreatorAgent(BaseAgent):
         prompt += "\n\nPlease refine the content based on this feedback:"
         return prompt
 
-    def generate(self, task: str, context: dict[str, Any] | None = None) -> str:
+    @override
+    def generate(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> str:
         """Generate content based on the task."""
         prompt = self._build_generation_prompt(task, context)
         return self._call_llm(prompt)
 
+    @override
     def review(
         self, content: str, rubric: dict[str, Any] | None = None
     ) -> dict[str, Any]:
@@ -43,6 +47,7 @@ class CreatorAgent(BaseAgent):
         # Parse response into structured feedback
         return {"feedback": response, "scores": {}}
 
+    @override
     def refine(self, original: str, feedback: dict[str, Any]) -> str:
         """Refine content based on feedback."""
         prompt = self._build_refinement_prompt(original, feedback)

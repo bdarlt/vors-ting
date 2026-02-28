@@ -7,6 +7,7 @@ from typing import Any
 
 from litellm import completion
 from litellm.exceptions import RateLimitError
+from litellm.types.utils import Choices, StreamingChoices
 
 
 class BaseAgent(ABC):
@@ -95,7 +96,9 @@ class BaseAgent(ABC):
 
     def _call_llm(self, prompt: str, **kwargs: Any) -> str:
         """Call the LLM with the given prompt, with retry logic for rate limits."""
-        messages = [{"role": "system", "content": self.system_prompt}]
+        messages: list[dict[str, str]] = [
+            {"role": "system", "content": self.system_prompt or ""}
+        ]
         if prompt:
             messages.append({"role": "user", "content": prompt})
 
@@ -112,7 +115,19 @@ class BaseAgent(ABC):
                     temperature=self.temperature,
                     **kwargs,
                 )
-                return response.choices[0].message.content
+                # Handle ModelResponse - check for choices attribute
+                choices = getattr(response, "choices", None)
+                if choices and len(choices) > 0:
+                    choice: Choices | StreamingChoices = choices[0]
+                    # Safely access message content (StreamingChoices uses delta)
+                    msg = getattr(choice, "message", None) or getattr(
+                        choice, "delta", None
+                    )
+                    content: str | None = getattr(msg, "content", None) if msg else None
+                    if content is None:
+                        return ""
+                    return content
+                return ""
 
             except RateLimitError as e:
                 last_exception = e
@@ -151,7 +166,9 @@ class BaseAgent(ABC):
         raise last_exception or RuntimeError("Max retries exceeded")
 
     @abstractmethod
-    def generate(self, task: str, context: dict[str, Any] | None = None) -> str:
+    def generate(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> str:
         """Generate content based on the task."""
 
     @abstractmethod

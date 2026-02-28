@@ -1,6 +1,6 @@
 """Curator agent implementation."""
 
-from typing import Any
+from typing import Any, override
 
 from .base import BaseAgent
 
@@ -16,7 +16,10 @@ class CuratorAgent(BaseAgent):
         prompt += "Provide clusters with names and item assignments:"
         return prompt
 
-    def generate(self, task: str, context: dict[str, Any] | None = None) -> str:
+    @override
+    def generate(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> str:
         """Generate content (curators can generate if needed)."""
         prompt = f"Task: {task}"
         if context:
@@ -25,6 +28,7 @@ class CuratorAgent(BaseAgent):
 
         return self._call_llm(prompt)
 
+    @override
     def review(
         self, content: str, rubric: dict[str, Any] | None = None
     ) -> dict[str, Any]:
@@ -37,6 +41,7 @@ class CuratorAgent(BaseAgent):
         response = self._call_llm(prompt)
         return {"feedback": response, "scores": {}}
 
+    @override
     def refine(self, original: str, feedback: dict[str, Any]) -> str:
         """Refine content based on feedback."""
         prompt = f"Original content:\n\n{original}"
