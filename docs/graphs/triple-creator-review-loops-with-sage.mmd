@@ -1,0 +1,64 @@
+sequenceDiagram
+    participant Agent
+    participant Moderator as Sage (Moderator)
+    participant Adam as Adam (LLM)
+    participant Brian as Brian (LLM)
+    participant Charlie as Charlie (LLM)
+    
+    Note over Agent,Charlie: Phase 1: Initial Document Creation
+    Agent->>Adam: Create document with specified characteristics
+    Agent->>Brian: Create document with specified characteristics
+    Agent->>Charlie: Create document with specified characteristics
+    
+    Adam-->>Agent: Document A
+    Brian-->>Agent: Document B
+    Charlie-->>Agent: Document C
+    
+    Note over Agent,Charlie: Phase 2: Comparative Analysis (Round 1)
+    Agent->>Adam: Review Documents B & C<br/>Compare all three versions
+    Agent->>Brian: Review Documents A & C<br/>Compare all three versions
+    Agent->>Charlie: Review Documents A & B<br/>Compare all three versions
+    
+    Adam-->>Agent: Feedback A
+    Brian-->>Agent: Feedback B
+    Charlie-->>Agent: Feedback C
+    
+    Note over Agent: Organize feedback into<br/>coherent markdown report
+    
+    loop Until Sage signals STOP or MAX_ROUNDS=4
+        Note over Moderator: Analyze feedback quality:<br/>- Detect sycophancy (excessive agreement)<br/>- Identify repetition/stagnation<br/>- Measure convergence speed<br/>- Assess novelty of insights
+        
+        alt High Quality Feedback
+            Moderator-->>Agent: Status: CONTINUE<br/>Round {n} shows meaningful progress
+        else Low Quality / Stagnation
+            Moderator-->>Agent: Status: STOP_EARLY<br/>Reason: [Sycophancy/Repetition/No progress]
+        end
+        
+        opt Continue = True
+            Note over Agent,Charlie: Phase 3: Feedback Integration
+            
+            Agent->>Adam: Present compiled feedback + your doc<br/>Sage indicates round {n} quality: [score]
+            Agent->>Brian: Present compiled feedback + your doc<br/>Sage indicates round {n} quality: [score]
+            Agent->>Charlie: Present compiled feedback + your doc<br/>Sage indicates round {n} quality: [score]
+            
+            Adam-->>Agent: Revised Document A (v{n+1})
+            Brian-->>Agent: Revised Document B (v{n+1})
+            Charlie-->>Agent: Revised Document C (v{n+1})
+            
+            Note over Agent,Charlie: Phase 4: Re-comparison
+            Agent->>Adam: Review latest versions
+            Agent->>Brian: Review latest versions
+            Agent->>Charlie: Review latest versions
+            
+            Adam-->>Agent: Updated Feedback A
+            Brian-->>Agent: Updated Feedback B
+            Charlie-->>Agent: Updated Feedback C
+            
+            Note over Agent: Update markdown report with<br/>Sage's quality assessment
+        end
+    end
+    
+    Note over Moderator,Agent: Final Assessment
+    Moderator-->>Agent: Summary Report:<br/>- Total rounds completed<br/>- Quality metrics per round<br/>- Convergence analysis<br/>- Recommendation on final output
+    
+    Note over Agent: Final Output: Complete markdown report<br/>with Sage's quality assessments and<br/>termination reason

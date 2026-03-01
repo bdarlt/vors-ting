@@ -186,3 +186,4 @@ def test_orchestrator_run(mock_llm):
 - `docs/development_guide.md` - Deep debugging, architecture decisions
 - `docs/design.md` - System design rationale
 - `docs/memory-system.md` - Working with persistent memory
+- `docs/development/migration-to-pydantic-ai.md` - Migrating from LiteLLM to Pydantic AI

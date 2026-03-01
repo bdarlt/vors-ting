@@ -1,24 +1,32 @@
-# Use the official Astral uv image (Python 3.13)
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+# Use the official Astral uv image (Python 3.13 on Debian Trixie)
+FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim
 
-# Install essential system tools for the agent's shell mode
+# Install essential system tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     ca-certificates \
+    golang-1.24-go \
     && rm -rf /var/lib/apt/lists/*
 
-# Pre-install Kimi CLI as a global tool
+# Add Go to PATH
+ENV PATH="/usr/lib/go-1.24/bin:$PATH"
+
+# Pre-install Kimi CLI
 RUN uv tool install --python 3.13 kimi-cli
 
-# Set the working directory
+# Install beans CLI (task tracker)
+# Note: Go will auto-download newer toolchain if beans requires it
+RUN go install github.com/hmans/beans@latest
+
+# Set working directory
 WORKDIR /workspace
 
-# Add uv tool bin to PATH so 'kimi' works immediately
-ENV PATH="/root/.local/bin/:$PATH"
+# Add bins to PATH (include Go bin for beans and any auto-downloaded toolchains)
+ENV PATH="/root/.local/bin:/root/go/bin:/usr/lib/go-1.24/bin:$PATH"
 
-# Global git fix for container volume ownership
+# Global git fix
 RUN git config --global --add safe.directory /workspace
 
-# Launch Kimi with your local MCP config
-ENTRYPOINT ["kimi", "--mcp-config-file", "/workspace/mcp.json"]
+# Default: interactive shell
+CMD ["bash"]

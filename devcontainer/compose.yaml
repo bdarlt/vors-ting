@@ -1,60 +1,51 @@
 services:
-  # The Brain
+  # The Brain - Python + Go (beans)
   kimi-agent:
     build: 
-      context: . # Looks for Dockerfile in the devcontainer folder
+      context: .
+      dockerfile: Dockerfile.kimi
     image: my-kimi-agent:latest
     volumes:
-      - ..:/workspace:Z # Mounts the ACTUAL project root (parent folder)
-      - ~/.config/kimi-cli:/root/.config/kimi-cli:Z
-    # Point to the mcp.json inside this folder
-    entrypoint: ["kimi", "--mcp-config-file", "/workspace/devcontainer/mcp.json"]
+      - ..:/workspace:Z
+      - ~/.kimi:/root/.config/kimi-cli:Z
+      - beans-data:/root/.beans
     stdin_open: true
     tty: true
     networks:
       - mcp-net
 
-  # Memory Bank
-  memory-bank:
+  # Sequential Thinking - official MCP image
+  thinking-tool:
+    image: docker.io/mcp/sequentialthinking:latest
+    networks:
+      - mcp-net
+
+  # MCP Gateway - bridges HTTP/SSE to thinking-tool's stdio
+  mcp-gateway:
     image: node:22-slim
-    volumes:
-      - ..:/workspace:Z
-    working_dir: /workspace
-    command: ["npx", "-y", "@modelcontextprotocol/server-bridge", "--port", "8080", "npx", "-y", "@alioshr/memory-bank-mcp"]
+    command:
+      - npx
+      - -y
+      - supergateway
+      - --port
+      - "8080"
+      - --stdio
+      - docker
+      - exec
+      - -i
+      - devcontainer-thinking-tool-1
+      - node
+      - /app/dist/index.js
     networks:
       - mcp-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:8080/sse\")'"]
       interval: 5s
       timeout: 2s
       retries: 5
 
-  # Beads
-  beads:
-    image: golang:1.26-bookworm
-    volumes:
-      - ..:/workspace:Z
-      - ./install.sh:/tmp/install.sh:Z # Local to devcontainer folder
-    working_dir: /workspace
-    command: >
-      sh -c "apt-get update && apt-get install -y git curl && 
-      chmod +x /tmp/install.sh && /tmp/install.sh && 
-      npx -y @modelcontextprotocol/server-bridge --port 8080 beads-mcp"
-    networks:
-      - mcp-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Sequential Thinking
-  thinking-tool:
-    image: docker.io/mcp/sequentialthinking
-    networks:
-      - mcp-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
-
 networks:
   mcp-net:
+
+volumes:
+  beans-data:

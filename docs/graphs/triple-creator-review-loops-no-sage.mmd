@@ -1,0 +1,50 @@
+sequenceDiagram
+    participant Agent
+    participant Adam as Adam (LLM)
+    participant Brian as Brian (LLM)
+    participant Charlie as Charlie (LLM)
+    
+    Note over Agent,Charlie: Phase 1: Initial Document Creation
+    Agent->>Adam: Create document with specified characteristics
+    Agent->>Brian: Create document with specified characteristics
+    Agent->>Charlie: Create document with specified characteristics
+    
+    Adam-->>Agent: Document A
+    Brian-->>Agent: Document B
+    Charlie-->>Agent: Document C
+    
+    Note over Agent,Charlie: Phase 2: Comparative Analysis (Round 1)
+    Agent->>Adam: Review Documents B & C<br/>Compare all three versions<br/>Identify benefits, improvements, gaps, risks
+    Agent->>Brian: Review Documents A & C<br/>Compare all three versions<br/>Identify benefits, improvements, gaps, risks
+    Agent->>Charlie: Review Documents A & B<br/>Compare all three versions<br/>Identify benefits, improvements, gaps, risks
+    
+    Adam-->>Agent: Feedback A (analysis of all documents)
+    Brian-->>Agent: Feedback B (analysis of all documents)
+    Charlie-->>Agent: Feedback C (analysis of all documents)
+    
+    Note over Agent: Organize feedback into<br/>coherent markdown report
+    
+    loop Iteration 2-4 (Repeat 2-4 times)
+        Note over Agent,Charlie: Phase 3: Feedback Integration & Revision
+        
+        Agent->>Adam: Present compiled feedback + your doc<br/>Please incorporate feedback into next iteration
+        Agent->>Brian: Present compiled feedback + your doc<br/>Please incorporate feedback into next iteration
+        Agent->>Charlie: Present compiled feedback + your doc<br/>Please incorporate feedback into next iteration
+        
+        Adam-->>Agent: Revised Document A (v2+)
+        Brian-->>Agent: Revised Document B (v2+)
+        Charlie-->>Agent: Revised Document C (v2+)
+        
+        Note over Agent,Charlie: Phase 4: Re-comparison (if more iterations)
+        Agent->>Adam: Review latest versions of B & C<br/>Compare and provide new feedback
+        Agent->>Brian: Review latest versions of A & C<br/>Compare and provide new feedback
+        Agent->>Charlie: Review latest versions of A & B<br/>Compare and provide new feedback
+        
+        Adam-->>Agent: Updated Feedback A
+        Brian-->>Agent: Updated Feedback B
+        Charlie-->>Agent: Updated Feedback C
+        
+        Note over Agent: Update markdown report with<br/>new insights from this round
+    end
+    
+    Note over Agent: Final Output: Complete markdown report<br/>with all iterations and final documents

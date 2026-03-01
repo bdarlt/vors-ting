@@ -3,6 +3,6 @@
 cd "$(dirname -- "$0")"
 
 podman compose -f compose.yaml up -d && \
-podman compose -f compose.yaml exec kimi-agent curl -s http://thinking-tool:8080/sse > /dev/null && \
-echo "✅ Network is UP" || echo "❌ Network is DOWN"
-
+sleep 5 && \
+podman compose -f compose.yaml exec mcp-gateway node -e "require('http').get('http://localhost:8080/sse', (r) => console.log('OK'))" && \
+echo "✅ Kimi agent + sequential thinking are up" || echo "❌ MCP gateway not ready"
