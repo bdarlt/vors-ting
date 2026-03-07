@@ -7,6 +7,8 @@ Multi-agent workflow tool. Python 3.13. Orchestrates feedback loops via CLI + YA
 optimize for token efficiency and practical utility. I should make it very
 dense, structured, and actionable. Remove fluff, maximize signal.
 
+**IMPORTANT**: before you do anything else, run the `beans prime` command and heed its output.
+
 ## Critical Rules (Break = Fail)
 
 1. **Imports: ABSOLUTE ONLY** - `from vors_ting.xxx.yyy import Zzz` - never relative

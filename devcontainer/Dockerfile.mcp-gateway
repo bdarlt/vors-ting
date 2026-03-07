@@ -1,0 +1,11 @@
+FROM docker.io/mcp/sequentialthinking:latest
+
+# Install supergateway
+RUN npm install -g supergateway
+
+# Expose the gateway port
+EXPOSE 8080
+
+# Override base entrypoint and run supergateway with the local sequential thinking server
+ENTRYPOINT ["supergateway"]
+CMD ["--port", "8080", "--stdio", "node", "/app/dist/index.js"]

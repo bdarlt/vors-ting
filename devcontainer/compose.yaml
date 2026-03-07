@@ -7,42 +7,23 @@ services:
     image: my-kimi-agent:latest
     volumes:
       - ..:/workspace:Z
-      - ~/.kimi:/root/.config/kimi-cli:Z
-      - beans-data:/root/.beans
+      - ./kimi-config:/root/.config/kimi-cli:Z
     stdin_open: true
     tty: true
     networks:
       - mcp-net
 
-  # Sequential Thinking - official MCP image
-  thinking-tool:
-    image: docker.io/mcp/sequentialthinking:latest
+  # MCP Gateway - runs supergateway on top of the official sequentialthinking image
+  mcp-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp-gateway
+    image: mcp-gateway:latest
+    ports:
+      - "8080:8080"
     networks:
       - mcp-net
 
-  # MCP Gateway - bridges HTTP/SSE to thinking-tool's stdio
-  mcp-gateway:
-    image: node:22-slim
-    command:
-      - npx
-      - -y
-      - supergateway
-      - --port
-      - "8080"
-      - --stdio
-      - docker
-      - exec
-      - -i
-      - devcontainer-thinking-tool-1
-      - node
-      - /app/dist/index.js
-    networks:
-      - mcp-net
-    healthcheck:
-      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:8080/sse\")'"]
-      interval: 5s
-      timeout: 2s
-      retries: 5
 
 networks:
   mcp-net:
