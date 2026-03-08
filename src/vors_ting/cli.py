@@ -1,5 +1,6 @@
 """Command-line interface for Vörs ting."""
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -53,7 +54,7 @@ def run(
     )
 
     # Run the feedback loop
-    result = orchestrator.run()
+    result = asyncio.run(orchestrator.run())
 
     # Save results
     if output_dir:
