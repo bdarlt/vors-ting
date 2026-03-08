@@ -1,25 +1,25 @@
 """Main orchestrator for Vörs ting."""
 
+import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 from rich.console import Console
 from sentence_transformers import SentenceTransformer
 
+from vors_ting.agents.base import BaseAgent
 from vors_ting.agents.creator import CreatorAgent
 from vors_ting.agents.curator import CuratorAgent
 from vors_ting.agents.reviewer import ReviewerAgent
+from vors_ting.agents.schemas import ReviewResult
 from vors_ting.core.config import Config
 from vors_ting.core.logging import (
     InMemoryInteractionLogger,
     InteractionLogger,
 )
-
-if TYPE_CHECKING:
-    from vors_ting.agents.base import BaseAgent
 
 # Lazy-loaded embedding model (initialized on first use)
 _embedding_model: SentenceTransformer | None = None
@@ -151,24 +151,24 @@ class Orchestrator:
 
         self._log("Agents initialized.\n", style="green")
 
-    def run(self) -> dict[str, Any]:
+    async def run(self) -> dict[str, Any]:
         """Run the feedback loop."""
         result: dict[str, Any] = {}
         try:
             if self.config.mode == "converge":
-                result = self._run_converge_mode()
+                result = await self._run_converge_mode()
             else:
                 result = self._run_diverge_mode()
         except Exception:
             # Save state even on error, then re-raise
-            self._auto_save()
+            await self._auto_save()
             raise
         else:
             # Auto-save results on success
-            self._auto_save()
+            await self._auto_save()
         return result
 
-    def _run_converge_mode(self) -> dict[str, Any]:
+    async def _run_converge_mode(self) -> dict[str, Any]:
         """Run the convergence mode."""
         # Initialize agents
         self.initialize_agents()
@@ -178,7 +178,7 @@ class Orchestrator:
         self._log("ROUND 0: Initial Generation", style="bold yellow")
         self._log("=" * 50, style="bold")
 
-        initial_artifacts = self._initial_generation()
+        initial_artifacts = await self._initial_generation()
         self._log_round(0, {"artifacts": initial_artifacts})
 
         # Subsequent rounds
@@ -190,10 +190,10 @@ class Orchestrator:
             self._log("=" * 50, style="bold")
 
             # Review phase
-            reviews = self._review_phase(initial_artifacts)
+            reviews = await self._review_phase(initial_artifacts)
 
             # Refine phase
-            refined_artifacts = self._refine_phase(initial_artifacts, reviews)
+            refined_artifacts = await self._refine_phase(initial_artifacts, reviews)
 
             # Check convergence
             if self._check_convergence(initial_artifacts, refined_artifacts):
@@ -226,128 +226,160 @@ class Orchestrator:
         error_msg = "Divergence mode not yet implemented"
         raise NotImplementedError(error_msg)
 
-    def _initial_generation(self) -> list[str]:
-        """Generate initial artifacts."""
-        artifacts = []
-        for agent in self.agents:
-            if agent.role == "creator":
-                self._log(f"\n→ Prompting {agent.name} ({agent.model})", style="cyan")
-                self._log(f"  Task: {self.config.task[:60]}...")
+    async def _initial_generation(self) -> list[str]:
+        """Generate initial artifacts in parallel."""
+        creator_agents = [agent for agent in self.agents if agent.role == "creator"]
 
-                # Build prompt
-                prompt = agent._build_generation_prompt(self.config.task)  # noqa: SLF001
+        async def generate_for_agent(agent: BaseAgent) -> str:
+            self._log(f"\n→ Prompting {agent.name} ({agent.model})", style="cyan")
+            self._log(f"  Task: {self.config.task[:60]}...")
 
-                artifact = agent.generate(self.config.task)
-                artifacts.append(artifact)
+            # Build prompt
+            prompt = agent._build_generation_prompt(self.config.task)  # noqa: SLF001
 
-                # Log the interaction
-                self._log_interaction(
-                    round_num=0,
-                    agent_name=agent.name,
-                    agent_role="creator",
-                    prompt=prompt,
-                    response=artifact,
-                    metadata={"task": self.config.task, "phase": "initial"},
-                )
+            artifact = await agent.generate(self.config.task)
 
-                self._log(f"  ✓ Received response from {agent.name}", style="green")
-                self._log("  Preview:")
-                self._log(self._preview_text(artifact))
+            # Log the interaction
+            self._log_interaction(
+                round_num=0,
+                agent_name=agent.name,
+                agent_role="creator",
+                prompt=prompt,
+                response=artifact,
+                metadata={"task": self.config.task, "phase": "initial"},
+            )
 
-        return artifacts
+            self._log(f"  ✓ Received response from {agent.name}", style="green")
+            self._log("  Preview:")
+            self._log(self._preview_text(artifact))
 
-    def _review_phase(self, artifacts: list[str]) -> list[dict[str, Any]]:
-        """Perform the review phase."""
+            return artifact
+
+        tasks = [generate_for_agent(agent) for agent in creator_agents]
+        artifacts = await asyncio.gather(*tasks)
+        return list(artifacts)
+
+    async def _review_phase(self, artifacts: list[str]) -> list[ReviewResult]:
+        """Perform the review phase in parallel."""
         self._log("\n--- Review Phase ---", style="bold magenta")
-        reviews = []
         rubric = self.config.rubric.model_dump() if self.config.rubric else None
+        reviewer_agents = [agent for agent in self.agents if agent.role == "reviewer"]
 
-        for artifact in artifacts:
-            for agent in self.agents:
-                if agent.role == "reviewer":
-                    self._log(
-                        f"\n→ Connecting with LLM - {agent.name} ({agent.model})",
-                        style="cyan",
-                    )
-                    self._log("  Reviewing artifact...")
+        async def review_artifact(
+            agent: BaseAgent, artifact: str, artifact_index: int
+        ) -> ReviewResult | None:
+            self._log(
+                f"\n→ Connecting with LLM - {agent.name} ({agent.model})",
+                style="cyan",
+            )
+            self._log("  Reviewing artifact...")
 
-                    # Build prompt
-                    prompt = agent._build_review_prompt(artifact, rubric)  # noqa: SLF001
+            # Build prompt
+            prompt = agent._build_review_prompt(artifact, rubric)  # noqa: SLF001
 
-                    review = agent.review(artifact, rubric)
-                    reviews.append(review)
+            review = await agent.review(artifact, rubric)
 
-                    # Log the interaction
-                    self._log_interaction(
-                        round_num=self.current_round,
-                        agent_name=agent.name,
-                        agent_role="reviewer",
-                        prompt=prompt,
-                        response=json.dumps(review, indent=2),
-                        metadata={
-                            "phase": "review",
-                            "rubric": rubric,
-                            "artifact_index": artifacts.index(artifact),
-                        },
-                    )
+            # Log the interaction
+            self._log_interaction(
+                round_num=self.current_round,
+                agent_name=agent.name,
+                agent_role="reviewer",
+                prompt=prompt,
+                response=json.dumps(review.model_dump(), indent=2),
+                metadata={
+                    "phase": "review",
+                    "rubric": rubric,
+                    "artifact_index": artifact_index,
+                },
+            )
 
-                    self._log(f"  ✓ Feedback received from {agent.name}", style="green")
-                    feedback_text = review.get("feedback", "")
-                    feedback_preview = self._preview_text(feedback_text, lines=3)
-                    self._log(f"  Feedback preview: {feedback_preview[:100]}...")
+            self._log(f"  ✓ Feedback received from {agent.name}", style="green")
+            feedback_text = review.feedback
+            feedback_preview = self._preview_text(feedback_text, lines=3)
+            self._log(f"  Feedback preview: {feedback_preview[:100]}...")
+
+            return review
+
+        tasks = [
+            review_artifact(agent, artifact, artifact_index)
+            for artifact_index, artifact in enumerate(artifacts)
+            for agent in reviewer_agents
+        ]
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Filter out exceptions, log failures
+        reviews: list[ReviewResult] = []
+        for result in results:
+            if isinstance(result, BaseException):
+                self._log(f"  ✗ Review failed: {result}", style="red")
+            elif result is not None:
+                reviews.append(result)
 
         return reviews
 
-    def _refine_phase(
-        self, artifacts: list[str], reviews: list[dict[str, Any]]
+    async def _refine_phase(
+        self, artifacts: list[str], reviews: list[ReviewResult]
     ) -> list[str]:
-        """Perform the refinement phase."""
+        """Perform the refinement phase in parallel."""
         self._log("\n--- Refinement Phase ---", style="bold magenta")
-        refined_artifacts = []
 
+        # Get creator agents
+        creator_agents = [agent for agent in self.agents if agent.role == "creator"]
+        if not creator_agents:
+            return artifacts
+
+        async def refine_artifact(
+            artifact: str, artifact_index: int, artifact_reviews: list[ReviewResult]
+        ) -> str:
+            # Find a creator to refine (cycle through creators if multiple)
+            agent = creator_agents[artifact_index % len(creator_agents)]
+
+            self._log(
+                f"\n→ Prompting {agent.name} to refine artifact",
+                style="cyan",
+            )
+            self._log(f"  Incorporating {len(artifact_reviews)} review(s)...")
+
+            # Build prompt
+            prompt = agent._build_refinement_prompt(  # noqa: SLF001
+                artifact, {"reviews": [r.model_dump() for r in artifact_reviews]}
+            )
+
+            refined = await agent.refine(
+                artifact, {"reviews": [r.model_dump() for r in artifact_reviews]}
+            )
+
+            # Log the interaction
+            self._log_interaction(
+                round_num=self.current_round,
+                agent_name=agent.name,
+                agent_role="creator",
+                prompt=prompt,
+                response=refined,
+                metadata={
+                    "phase": "refinement",
+                    "artifact_index": artifact_index,
+                    "reviews": [r.model_dump() for r in artifact_reviews],
+                },
+            )
+
+            self._log(f"  ✓ Refined by {agent.name}", style="green")
+            self._log("  Preview:")
+            self._log(self._preview_text(refined))
+
+            return refined
+
+        tasks = []
         for i, artifact in enumerate(artifacts):
             # Get relevant reviews for this artifact
             artifact_reviews = [
                 reviews[j] for j in range(i, len(reviews), len(artifacts))
             ]
+            tasks.append(refine_artifact(artifact, i, artifact_reviews))
 
-            # Find a creator to refine
-            for agent in self.agents:
-                if agent.role == "creator":
-                    self._log(
-                        f"\n→ Prompting {agent.name} to refine artifact",
-                        style="cyan",
-                    )
-                    self._log(f"  Incorporating {len(artifact_reviews)} review(s)...")
-
-                    # Build prompt
-                    prompt = agent._build_refinement_prompt(  # noqa: SLF001
-                        artifact, {"reviews": artifact_reviews}
-                    )
-
-                    refined = agent.refine(artifact, {"reviews": artifact_reviews})
-                    refined_artifacts.append(refined)
-
-                    # Log the interaction
-                    self._log_interaction(
-                        round_num=self.current_round,
-                        agent_name=agent.name,
-                        agent_role="creator",
-                        prompt=prompt,
-                        response=refined,
-                        metadata={
-                            "phase": "refinement",
-                            "artifact_index": i,
-                            "reviews": artifact_reviews,
-                        },
-                    )
-
-                    self._log(f"  ✓ Refined by {agent.name}", style="green")
-                    self._log("  Preview:")
-                    self._log(self._preview_text(refined))
-                    break
-
-        return refined_artifacts
+        refined_artifacts = await asyncio.gather(*tasks)
+        return list(refined_artifacts)
 
     def _check_convergence(
         self, old_artifacts: list[str], new_artifacts: list[str]
@@ -422,7 +454,7 @@ class Orchestrator:
                 self.round_history[-1]["interactions"] = []
             self.round_history[-1]["interactions"].append(result)
 
-    def _auto_save(self) -> Path:
+    async def _auto_save(self) -> Path:
         """Auto-save the current state to the configured log directory."""
         output_dir = self._get_output_dir()
         output_dir.mkdir(parents=True, exist_ok=True)
