@@ -8,4 +8,4 @@ EXPOSE 8080
 
 # Override base entrypoint and run supergateway with the local sequential thinking server
 ENTRYPOINT ["supergateway"]
-CMD ["--port", "8080", "--stdio", "node", "/app/dist/index.js"]
+CMD ["--stdio", "node /app/dist/index.js", "--outputTransport", "streamableHttp", "--port", "8080", "--streamableHttpPath", "/mcp"]

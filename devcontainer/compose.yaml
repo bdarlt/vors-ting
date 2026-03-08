@@ -7,7 +7,7 @@ services:
     image: my-kimi-agent:latest
     volumes:
       - ..:/workspace:Z
-      - ./kimi-config:/root/.config/kimi-cli:Z
+      - ./kimi-config:/root/.kimi:Z
     stdin_open: true
     tty: true
     networks:

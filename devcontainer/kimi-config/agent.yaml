@@ -1,0 +1,7 @@
+version: 1
+agent:
+  extend: default
+  name: container-agent
+  exclude_tools:
+    - "kimi_cli.tools.shell:Shell"
+    # Keep file read/write (they still prompt), but exclude shell

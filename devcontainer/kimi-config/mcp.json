@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "url": "http://mcp-gateway:8080/mcp",
+      "transport": "http"
+    }
+  }
+}

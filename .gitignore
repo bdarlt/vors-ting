@@ -3,6 +3,10 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+devcontainer/kimi-config/config.toml
+devcontainer/kimi-config/sessions/
+devcontainer/kimi-config/user-history/
+
 .env
 .env-local
 
