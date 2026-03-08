@@ -1,11 +1,11 @@
 ---
 # workspace-9cs1
 title: 'Phase 3: BaseAgent Refactor'
-status: todo
+status: completed
 type: task
 priority: normal
 created_at: 2026-03-08T14:04:31Z
-updated_at: 2026-03-08T14:13:52Z
+updated_at: 2026-03-08T14:42:30Z
 parent: workspace-aikw
 blocked_by:
     - workspace-qev7
@@ -29,11 +29,11 @@ Replace manual LLM calling with Pydantic AI Agent in src/vors_ting/agents/base.p
 - Update abstract methods to be async
 
 ### Steps
-- [ ] Refactor src/vors_ting/agents/base.py
-- [ ] Add _create_agent() method
-- [ ] Make _call_llm() async with output_type parameter
-- [ ] Update abstract methods to be async
-- [ ] Run tests and type checks
+- [x] Refactor src/vors_ting/agents/base.py
+- [x] Add _create_agent() method
+- [x] Make _call_llm() async with output_type parameter
+- [x] Update abstract methods to be async
+- [x] Run tests and type checks
 
 ### Parent
 Part of the LiteLLM → Pydantic AI migration (milestone: workspace-aikw).

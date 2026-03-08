@@ -1,11 +1,11 @@
 ---
 # workspace-0m5e
 title: 'Phase 8: CLI Entry Point Update'
-status: todo
+status: completed
 type: task
 priority: normal
 created_at: 2026-03-08T14:04:31Z
-updated_at: 2026-03-08T14:14:24Z
+updated_at: 2026-03-08T14:54:28Z
 parent: workspace-aikw
 blocked_by:
     - workspace-tqmd
