@@ -5,6 +5,8 @@ from typing import Any, TypeVar
 
 from pydantic_ai import Agent
 
+from vors_ting.agents.schemas import ReviewResult
+
 T = TypeVar("T")
 
 
@@ -72,7 +74,7 @@ class BaseAgent(ABC):
     @abstractmethod
     async def review(
         self, content: str, rubric: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> ReviewResult:
         """Review content and provide feedback."""
 
     @abstractmethod

@@ -1,6 +1,8 @@
 """Reviewer agent implementation."""
 
-from typing import Any, override
+from typing import Any, cast, override
+
+from vors_ting.agents.schemas import ReviewResult
 
 from .base import BaseAgent
 
@@ -19,7 +21,7 @@ class ReviewerAgent(BaseAgent):
         return prompt
 
     @override
-    def generate(
+    async def generate(
         self, task: str, context: dict[str, Any] | None = None
     ) -> str:
         """Generate content (reviewers can also generate if needed)."""
@@ -28,23 +30,22 @@ class ReviewerAgent(BaseAgent):
             prompt += f"\n\nContext: {context}"
         prompt += "\n\nPlease generate content:"
 
-        return self._call_llm(prompt)
+        return await self._call_llm(prompt)
 
     @override
-    def review(
+    async def review(
         self, content: str, rubric: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> ReviewResult:
         """Review content and provide structured feedback."""
         prompt = self._build_review_prompt(content, rubric)
-        response = self._call_llm(prompt)
-        # Parse response into structured feedback
-        return {"feedback": response, "scores": {}}
+        result = await self._call_llm(prompt, output_type=ReviewResult)
+        return cast("ReviewResult", result)
 
     @override
-    def refine(self, original: str, feedback: dict[str, Any]) -> str:
+    async def refine(self, original: str, feedback: dict[str, Any]) -> str:
         """Refine content based on feedback."""
         prompt = f"Original content:\n\n{original}"
         prompt += f"\n\nFeedback received:\n\n{feedback}"
         prompt += "\n\nPlease refine the content based on this feedback:"
 
-        return self._call_llm(prompt)
+        return await self._call_llm(prompt)
