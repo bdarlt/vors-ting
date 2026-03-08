@@ -2,14 +2,24 @@
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from vors_ting.core.config import AgentConfig, Config, MetricsConfig
-from vors_ting.orchestration.orchestrator import Orchestrator
 
 
-def test_log_interaction() -> None:
+# Import Orchestrator after patching
+def get_orchestrator_class():
+    """Get Orchestrator class with mocked dependencies."""
+    from vors_ting.orchestration.orchestrator import Orchestrator
+
+    return Orchestrator
+
+
+def test_log_interaction(mock_sentence_transformers) -> None:  # noqa: ARG001
     """Test that _log_interaction captures prompt/response data."""
+    orchestrator_class = get_orchestrator_class()
     config = Config(
         task="Test task",
         artifact_type="adr",
@@ -21,7 +31,7 @@ def test_log_interaction() -> None:
         rounds=1,
     )
 
-    orchestrator = Orchestrator(config)
+    orchestrator = orchestrator_class(config)
     # Initialize round_history with a round entry
     orchestrator.round_history = [{"round": 0, "artifacts": []}]
 
@@ -49,8 +59,10 @@ def test_log_interaction() -> None:
     assert "timestamp" in interaction
 
 
-def test_auto_save(tmp_path: Path) -> None:
+@pytest.mark.asyncio
+async def test_auto_save(mock_sentence_transformers, tmp_path: Path) -> None:  # noqa: ARG001
     """Test that _auto_save creates logging output with interactions."""
+    orchestrator_class = get_orchestrator_class()
     config = Config(
         task="Test task",
         artifact_type="adr",
@@ -63,7 +75,7 @@ def test_auto_save(tmp_path: Path) -> None:
         metrics=MetricsConfig(log_dir=str(tmp_path)),
     )
 
-    orchestrator = Orchestrator(config, quiet=True)
+    orchestrator = orchestrator_class(config, quiet=True)
     orchestrator.current_round = 1
     orchestrator.round_history = [
         {
@@ -83,7 +95,7 @@ def test_auto_save(tmp_path: Path) -> None:
         }
     ]
 
-    output_dir = orchestrator._auto_save()
+    output_dir = await orchestrator._auto_save()
 
     # Check that all expected files were created
     assert (output_dir / "run_history.json").exists()
@@ -111,8 +123,9 @@ def test_auto_save(tmp_path: Path) -> None:
         assert "Test task" in summary
 
 
-def test_log_interaction_multiple_rounds() -> None:
+def test_log_interaction_multiple_rounds(mock_sentence_transformers) -> None:  # noqa: ARG001
     """Test logging interactions across multiple rounds."""
+    orchestrator_class = get_orchestrator_class()
     config = Config(
         task="Test task",
         artifact_type="adr",
@@ -127,7 +140,7 @@ def test_log_interaction_multiple_rounds() -> None:
         rounds=2,
     )
 
-    orchestrator = Orchestrator(config)
+    orchestrator = orchestrator_class(config)
 
     # Simulate round 0
     orchestrator.round_history = [{"round": 0, "artifacts": ["Artifact 1"]}]
@@ -169,8 +182,9 @@ def test_log_interaction_multiple_rounds() -> None:
     assert interactions[1]["agent_role"] == "creator"
 
 
-def test_orchestrator_initialization() -> None:
+def test_orchestrator_initialization(mock_sentence_transformers) -> None:  # noqa: ARG001
     """Test orchestrator initialization."""
+    orchestrator_class = get_orchestrator_class()
     config = Config(
         task="Test task",
         artifact_type="adr",
@@ -182,14 +196,15 @@ def test_orchestrator_initialization() -> None:
         rounds=3,
     )
 
-    orchestrator = Orchestrator(config)
+    orchestrator = orchestrator_class(config)
     assert orchestrator.config == config
     assert len(orchestrator.agents) == 0
     assert orchestrator.current_round == 0
 
 
-def test_agent_initialization() -> None:
+def test_agent_initialization(mock_sentence_transformers) -> None:  # noqa: ARG001
     """Test agent initialization."""
+    orchestrator_class = get_orchestrator_class()
     config = Config(
         task="Test task",
         artifact_type="adr",
@@ -204,29 +219,39 @@ def test_agent_initialization() -> None:
         rounds=3,
     )
 
-    orchestrator = Orchestrator(config)
-    orchestrator.initialize_agents()
+    orchestrator = orchestrator_class(config)
+
+    # Patch _create_agent on agent classes to avoid API key requirement
+    with (
+        patch(
+            "vors_ting.orchestration.orchestrator.CreatorAgent._create_agent",
+            return_value=None,
+        ),
+        patch(
+            "vors_ting.orchestration.orchestrator.ReviewerAgent._create_agent",
+            return_value=None,
+        ),
+    ):
+        orchestrator.initialize_agents()
 
     assert len(orchestrator.agents) == 2
     assert orchestrator.agents[0].name == "Creator1"
     assert orchestrator.agents[1].name == "Reviewer1"
 
 
-@patch("vors_ting.orchestration.orchestrator.CreatorAgent")
-@patch("vors_ting.orchestration.orchestrator.ReviewerAgent")
-def test_converge_mode(mock_reviewer, mock_creator) -> None:
+@pytest.mark.asyncio
+async def test_converge_mode(mock_sentence_transformers) -> None:  # noqa: ARG001
     """Test converge mode execution."""
-    # Setup mock agents
+    orchestrator_class = get_orchestrator_class()
+    # Setup mock agents with async methods
     mock_creator_instance = MagicMock()
     mock_creator_instance.role = "creator"
-    mock_creator_instance.generate.return_value = "Initial content"
-    mock_creator_instance.refine.return_value = "Refined content"
-    mock_creator.return_value = mock_creator_instance
+    mock_creator_instance.generate = AsyncMock(return_value="Initial content")
+    mock_creator_instance.refine = AsyncMock(return_value="Refined content")
 
     mock_reviewer_instance = MagicMock()
     mock_reviewer_instance.role = "reviewer"
-    mock_reviewer_instance.review.return_value = {"feedback": "Good job"}
-    mock_reviewer.return_value = mock_reviewer_instance
+    mock_reviewer_instance.review = AsyncMock(return_value={"feedback": "Good job"})
 
     config = Config(
         task="Test task",
@@ -242,18 +267,30 @@ def test_converge_mode(mock_reviewer, mock_creator) -> None:
         rounds=2,
     )
 
-    orchestrator = Orchestrator(config)
+    orchestrator = orchestrator_class(config)
 
-    # Mock convergence check to return True on second round
-    with patch.object(orchestrator, "_check_convergence", side_effect=[False, True]):
-        result = orchestrator.run()
+    with (
+        patch(
+            "vors_ting.orchestration.orchestrator.CreatorAgent",
+            return_value=mock_creator_instance,
+        ),
+        patch(
+            "vors_ting.orchestration.orchestrator.ReviewerAgent",
+            return_value=mock_reviewer_instance,
+        ),
+        patch.object(
+            orchestrator, "_check_convergence", side_effect=[False, True]
+        ),
+    ):
+        result = await orchestrator.run()
 
     assert result["status"] == "converged"
     assert orchestrator.current_round == 2
 
 
-def test_save_state(tmp_path: Path) -> None:
+def test_save_state(mock_sentence_transformers, tmp_path: Path) -> None:  # noqa: ARG001
     """Test saving orchestrator state."""
+    orchestrator_class = get_orchestrator_class()
     config = Config(
         task="Test task",
         artifact_type="adr",
@@ -265,7 +302,7 @@ def test_save_state(tmp_path: Path) -> None:
         rounds=1,
     )
 
-    orchestrator = Orchestrator(config)
+    orchestrator = orchestrator_class(config)
     orchestrator.round_history = [{"round": 0, "artifacts": ["Test content"]}]
 
     output_dir = tmp_path / "output"

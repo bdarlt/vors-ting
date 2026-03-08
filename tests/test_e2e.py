@@ -2,20 +2,21 @@
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import yaml
 
 from vors_ting.cli import app
-from vors_ting.core.config import AgentConfig, Config
+from vors_ting.core.config import AgentConfig, Config, ConvergenceConfig
 from vors_ting.orchestration.orchestrator import Orchestrator, _get_embedding_model
 
 
 class TestConvergenceFlow:
     """Test the full convergence workflow."""
 
-    def test_full_flow_converges_early(self) -> None:
+    @pytest.mark.asyncio
+    async def test_full_flow_converges_early(self) -> None:
         """Test that the flow stops early when artifacts converge."""
         # Setup mock agents that return nearly identical content after first refinement
         config = Config(
@@ -36,11 +37,11 @@ class TestConvergenceFlow:
                 ),
             ],
             rounds=5,  # Request 5 rounds
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.95,
-                "max_rounds": 5,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.95,
+                max_rounds=5,
+            ),
         )
 
         orchestrator = Orchestrator(config)
@@ -67,14 +68,15 @@ class TestConvergenceFlow:
             mock_agent.role = "creator"
             orchestrator.agents = [mock_agent]
 
-            result = orchestrator.run()
+            result = await orchestrator.run()
 
             # Should converge and stop early
             assert result["status"] == "converged"
             # Should have stopped before max rounds
             assert orchestrator.current_round < config.rounds
 
-    def test_full_flow_max_rounds(self) -> None:
+    @pytest.mark.asyncio
+    async def test_full_flow_max_rounds(self) -> None:
         """Test that the flow runs all rounds when no convergence."""
         config = Config(
             task="Write a description",
@@ -94,11 +96,11 @@ class TestConvergenceFlow:
                 ),
             ],
             rounds=3,
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.95,
-                "max_rounds": 3,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.95,
+                max_rounds=3,
+            ),
         )
 
         orchestrator = Orchestrator(config)
@@ -125,7 +127,7 @@ class TestConvergenceFlow:
             mock_agent.role = "creator"
             orchestrator.agents = [mock_agent]
 
-            result = orchestrator.run()
+            result = await orchestrator.run()
 
             assert result["status"] == "max_rounds_reached"
             assert orchestrator.current_round == 3
@@ -145,11 +147,11 @@ class TestConvergenceDetection:
                 )
             ],
             rounds=3,
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.95,
-                "max_rounds": 3,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.95,
+                max_rounds=3,
+            ),
         )
 
         orchestrator = Orchestrator(config)
@@ -169,11 +171,11 @@ class TestConvergenceDetection:
                 )
             ],
             rounds=3,
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.95,
-                "max_rounds": 3,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.95,
+                max_rounds=3,
+            ),
         )
 
         orchestrator = Orchestrator(config)
@@ -197,11 +199,11 @@ class TestConvergenceDetection:
                 )
             ],
             rounds=3,
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.95,
-                "max_rounds": 3,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.95,
+                max_rounds=3,
+            ),
         )
 
         orchestrator = Orchestrator(config)
@@ -286,7 +288,8 @@ class TestYAMLIntegration:
         assert config.rounds == 2
         assert len(config.agents) == 2
 
-    def test_full_yaml_workflow(self, tmp_path: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_full_yaml_workflow(self, tmp_path: Path) -> None:
         """Test complete workflow from YAML to saved output."""
         config_data = {
             "task": "Write simple documentation",
@@ -313,17 +316,19 @@ class TestYAMLIntegration:
         orchestrator = Orchestrator(config)
 
         # Mock everything to avoid LLM calls
-        with patch("vors_ting.orchestration.orchestrator.CreatorAgent") as mock_creator:
+        with patch(
+            "vors_ting.orchestration.orchestrator.CreatorAgent"
+        ) as mock_creator:
             mock_instance = MagicMock()
             mock_instance.role = "creator"
             mock_instance.name = "Creator"
             mock_instance.model = "gpt-4"
-            mock_instance.generate.return_value = "Generated content"
-            mock_instance.refine.return_value = "Refined content"
+            mock_instance.generate = AsyncMock(return_value="Generated content")
+            mock_instance.refine = AsyncMock(return_value="Refined content")
             mock_creator.return_value = mock_instance
 
             output_dir = tmp_path / "output"
-            result = orchestrator.run()
+            result = await orchestrator.run()
             orchestrator.save_state(output_dir)
 
             assert result["status"] in ["converged", "max_rounds_reached"]
@@ -407,13 +412,21 @@ class TestCLIIntegration:
         output_dir = tmp_path / "cli_output"
 
         # Mock the orchestrator to avoid actual LLM calls
-        with patch("vors_ting.cli.Orchestrator") as mock_orch_class:
+        # Need to mock asyncio.run since CliRunner doesn't support async
+        with (
+            patch("vors_ting.cli.Orchestrator") as mock_orch_class,
+            patch("vors_ting.cli.asyncio.run") as mock_run,
+        ):
             mock_orch = MagicMock()
-            mock_orch.run.return_value = {"status": "converged"}
             mock_orch.current_round = 1
             mock_orch_class.return_value = mock_orch
 
-            result = runner.invoke(app, [str(config_path), "--output", str(output_dir)])
+            # Mock asyncio.run to return converged status
+            mock_run.return_value = {"status": "converged"}
+
+            result = runner.invoke(
+                app, [str(config_path), "--output", str(output_dir)]
+            )
 
             assert result.exit_code == 0
             assert "Status: converged" in result.output
@@ -423,7 +436,8 @@ class TestCLIIntegration:
 class TestPolyadicPattern:
     """Test polyadic patterns with multiple creators."""
 
-    def test_multiple_creators_flow(self) -> None:
+    @pytest.mark.asyncio
+    async def test_multiple_creators_flow(self) -> None:
         """Test workflow with multiple creator agents."""
         config = Config(
             task="Write documentation",
@@ -454,7 +468,9 @@ class TestPolyadicPattern:
         orchestrator = Orchestrator(config)
 
         with (
-            patch("vors_ting.orchestration.orchestrator.CreatorAgent") as mock_creator,
+            patch(
+                "vors_ting.orchestration.orchestrator.CreatorAgent"
+            ) as mock_creator,
             patch(
                 "vors_ting.orchestration.orchestrator.ReviewerAgent"
             ) as mock_reviewer,
@@ -462,17 +478,17 @@ class TestPolyadicPattern:
             # Setup creator mocks
             creator_instance = MagicMock()
             creator_instance.role = "creator"
-            creator_instance.generate.return_value = "Creator output"
-            creator_instance.refine.return_value = "Refined creator output"
+            creator_instance.generate = AsyncMock(return_value="Creator output")
+            creator_instance.refine = AsyncMock(return_value="Refined creator output")
             mock_creator.return_value = creator_instance
 
             # Setup reviewer mocks
             reviewer_instance = MagicMock()
             reviewer_instance.role = "reviewer"
-            reviewer_instance.review.return_value = {"feedback": "Good"}
+            reviewer_instance.review = AsyncMock(return_value={"feedback": "Good"})
             mock_reviewer.return_value = reviewer_instance
 
-            result = orchestrator.run()
+            result = await orchestrator.run()
 
             # Should create 2 creators
             assert mock_creator.call_count == 2
@@ -503,11 +519,11 @@ class TestEmbeddingModel:
                 )
             ],
             rounds=3,
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.90,  # Lower threshold for test
-                "max_rounds": 3,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.90,  # Lower threshold for test
+                max_rounds=3,
+            ),
         )
 
         orchestrator = Orchestrator(config)
@@ -530,11 +546,11 @@ class TestEmbeddingModel:
                 )
             ],
             rounds=3,
-            convergence={
-                "method": "similarity",
-                "similarity_threshold": 0.95,
-                "max_rounds": 3,
-            },
+            convergence=ConvergenceConfig(
+                method="similarity",
+                similarity_threshold=0.95,
+                max_rounds=3,
+            ),
         )
 
         orchestrator = Orchestrator(config)
