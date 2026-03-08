@@ -5,7 +5,7 @@ status: todo
 type: task
 priority: normal
 created_at: 2026-03-08T14:05:06Z
-updated_at: 2026-03-08T14:05:51Z
+updated_at: 2026-03-08T14:14:16Z
 parent: workspace-aikw
 blocked_by:
     - workspace-ud1o
@@ -36,3 +36,18 @@ Update src/vors_ting/orchestration/orchestrator.py for async support and paralle
 
 ### Parent
 Part of the LiteLLM → Pydantic AI migration (milestone: workspace-aikw).
+
+
+
+### Git Commit Checkpoint
+After completing this phase:
+```bash
+git add src/vors_ting/orchestration/orchestrator.py
+git commit -m "Phase 7: Update Orchestrator for async/parallel execution
+
+- Make run() and _run_converge_mode() async
+- Add _initial_generation() with asyncio.gather()
+- Add _review_phase() with parallel reviews
+- Add _refine_phase() with parallel refinements
+"
+```

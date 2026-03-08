@@ -5,7 +5,7 @@ status: todo
 type: task
 priority: normal
 created_at: 2026-03-08T14:04:31Z
-updated_at: 2026-03-08T14:05:50Z
+updated_at: 2026-03-08T14:13:52Z
 parent: workspace-aikw
 blocked_by:
     - workspace-qev7
@@ -37,3 +37,19 @@ Replace manual LLM calling with Pydantic AI Agent in src/vors_ting/agents/base.p
 
 ### Parent
 Part of the LiteLLM → Pydantic AI migration (milestone: workspace-aikw).
+
+
+
+### Git Commit Checkpoint
+After completing this phase:
+```bash
+git add src/vors_ting/agents/base.py
+git commit -m "Phase 3: Refactor BaseAgent to use Pydantic AI
+
+- Replace manual LLM calling with Pydantic AI Agent
+- Remove 60 lines of custom retry logic
+- Remove RateLimitError handling (built into Pydantic AI)
+- Make _call_llm() async with output_type parameter
+- Add _create_agent() method with retries=3
+"
+```

@@ -1,11 +1,11 @@
 ---
 # workspace-qev7
 title: 'Phase 2: Structured Output Schemas'
-status: todo
+status: in-progress
 type: task
 priority: normal
 created_at: 2026-03-08T14:04:29Z
-updated_at: 2026-03-08T14:05:50Z
+updated_at: 2026-03-08T14:37:13Z
 parent: workspace-aikw
 blocked_by:
     - workspace-r0o2
@@ -29,3 +29,17 @@ Classes to create:
 
 ### Parent
 Part of the LiteLLM → Pydantic AI migration (milestone: workspace-aikw).
+
+
+
+### Git Commit Checkpoint
+After completing this phase:
+```bash
+git add src/vors_ting/agents/schemas.py
+git commit -m "Phase 2: Add structured output schemas for agents
+
+- Add ReviewResult model for reviewer agent outputs
+- Add GenerationResult model for creator agent outputs
+- Include validation and computed properties
+"
+```

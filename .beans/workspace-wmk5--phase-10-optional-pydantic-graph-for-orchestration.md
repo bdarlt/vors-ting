@@ -5,7 +5,7 @@ status: todo
 type: feature
 priority: normal
 created_at: 2026-03-08T14:05:27Z
-updated_at: 2026-03-08T14:05:57Z
+updated_at: 2026-03-08T14:14:44Z
 parent: workspace-aikw
 blocked_by:
     - workspace-a852
@@ -66,3 +66,18 @@ Migrate the orchestrator to use pydantic-graph for declarative, visualizable, an
 
 ### Parent
 Optional advanced phase of the LiteLLM → Pydantic AI migration (milestone: workspace-aikw).
+
+
+
+### Git Commit Checkpoint
+After completing this phase:
+```bash
+git add src/vors_ting/orchestration/graph_nodes.py     src/vors_ting/orchestration/graph_orchestrator.py
+git commit -m "Phase 10: Add Pydantic Graph orchestration (optional)
+
+- Add graph_nodes.py with Initialize, GenerateInitial, Review, CheckConvergence, Refine nodes
+- Add graph_orchestrator.py for declarative workflow graphs
+- Add visualize() method for Mermaid diagrams
+- Support state persistence and human-in-the-loop
+"
+```

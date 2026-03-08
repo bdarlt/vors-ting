@@ -5,7 +5,7 @@ status: todo
 type: milestone
 priority: high
 created_at: 2026-03-08T14:01:22Z
-updated_at: 2026-03-08T14:05:40Z
+updated_at: 2026-03-08T14:14:54Z
 ---
 
 Migrate the Vörs ting multi-agent framework from LiteLLM to Pydantic AI for better structured outputs, built-in retries, type safety, and async support.
@@ -60,3 +60,36 @@ All agent classes, orchestrator, and tests
 | Testing | Mock completion() calls | Inject TestModel |
 | Observability | Print statements | OpenTelemetry tracing |
 | Reflection | Not implemented | Auto-retry on validation failure |
+
+
+
+## Git Commit Strategy
+
+Each phase includes a git commit checkpoint. Follow this workflow:
+
+1. **Work on the phase** - Make the required changes
+2. **Run tests** - Ensure everything passes: `uv run pytest -x`
+3. **Run type checks** - `uv run pyright`
+4. **Run linting** - `uv run ruff check`
+5. **Commit** - Use the provided commit message in each phase
+
+### Branch Recommendation
+```bash
+# Create a feature branch for the migration
+git checkout -b migrate/pydantic-ai
+
+# After all phases complete and verified
+git checkout main
+git merge migrate/pydantic-ai
+``"
+
+### Rollback Tags (Optional)
+```bash
+# Tag before migration starts (if on main)
+git tag before-pydantic-ai-migration
+
+# Tag after each major phase group
+git tag after-phase-3-baseagent  # Core refactor done
+git tag after-phase-6-agents     # All agents updated
+git tag after-phase-9-complete   # Migration complete
+``"

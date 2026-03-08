@@ -5,7 +5,7 @@ status: todo
 type: task
 priority: normal
 created_at: 2026-03-08T14:05:06Z
-updated_at: 2026-03-08T14:05:50Z
+updated_at: 2026-03-08T14:14:04Z
 parent: workspace-aikw
 blocked_by:
     - workspace-9cs1
@@ -31,3 +31,18 @@ Update src/vors_ting/agents/creator.py to use Pydantic AI with structured output
 
 ### Parent
 Part of the LiteLLM → Pydantic AI migration (milestone: workspace-aikw).
+
+
+
+### Git Commit Checkpoint
+After completing this phase:
+```bash
+git add src/vors_ting/agents/creator.py
+git commit -m "Phase 5: Update CreatorAgent for Pydantic AI
+
+- Import GenerationResult from schemas
+- Add @override decorators for type safety
+- Make generate(), review(), refine() async
+- Use structured output in generate() and refine()
+"
+```
