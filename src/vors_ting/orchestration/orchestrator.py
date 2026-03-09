@@ -4,7 +4,7 @@ import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from rich.console import Console
@@ -234,8 +234,9 @@ class Orchestrator:
             self._log(f"\n→ Prompting {agent.name} ({agent.model})", style="cyan")
             self._log(f"  Task: {self.config.task[:60]}...")
 
-            # Build prompt
-            prompt = agent._build_generation_prompt(self.config.task)  # noqa: SLF001
+            # Build prompt - cast to CreatorAgent for type checking
+            creator = cast("CreatorAgent", agent)
+            prompt = creator._build_generation_prompt(self.config.task)  # noqa: SLF001
 
             artifact = await agent.generate(self.config.task)
 
@@ -274,8 +275,9 @@ class Orchestrator:
             )
             self._log("  Reviewing artifact...")
 
-            # Build prompt
-            prompt = agent._build_review_prompt(artifact, rubric)  # noqa: SLF001
+            # Build prompt - cast to ReviewerAgent for type checking
+            reviewer = cast("ReviewerAgent", agent)
+            prompt = reviewer._build_review_prompt(artifact, rubric)  # noqa: SLF001
 
             review = await agent.review(artifact, rubric)
 
@@ -341,8 +343,9 @@ class Orchestrator:
             )
             self._log(f"  Incorporating {len(artifact_reviews)} review(s)...")
 
-            # Build prompt
-            prompt = agent._build_refinement_prompt(  # noqa: SLF001
+            # Build prompt - cast to CreatorAgent for type checking
+            creator = cast("CreatorAgent", agent)
+            prompt = creator._build_refinement_prompt(  # noqa: SLF001
                 artifact, {"reviews": [r.model_dump() for r in artifact_reviews]}
             )
 

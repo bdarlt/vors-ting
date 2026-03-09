@@ -1,6 +1,8 @@
 """Curator agent implementation."""
 
-from typing import Any, override
+from typing import Any, cast, override
+
+from vors_ting.agents.schemas import ReviewResult
 
 from .base import BaseAgent
 
@@ -31,15 +33,15 @@ class CuratorAgent(BaseAgent):
     @override
     async def review(
         self, content: str, rubric: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> ReviewResult:
         """Review content."""
         prompt = f"Review the following content:\n\n{content}"
         if rubric:
             prompt += f"\n\nEvaluation rubric: {rubric}"
-        prompt += "\n\nProvide feedback:"
+        prompt += "\n\nProvide feedback and scores:"
 
-        response = await self._call_llm(prompt)
-        return {"feedback": response, "scores": {}}
+        result = await self._call_llm(prompt, output_type=ReviewResult)
+        return cast("ReviewResult", result)
 
     @override
     async def refine(self, original: str, feedback: dict[str, Any]) -> str:

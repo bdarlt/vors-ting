@@ -2,9 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, ClassVar
-
-from typing_extensions import override
+from typing import Any, ClassVar, override
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -59,7 +57,7 @@ def validate_provider(provider: str, temperature: float) -> list[str]:
     if temperature < temp_min or temperature > temp_max:
         msg = (
             f"Temperature {temperature} outside recommended range "
-            + f"[{temp_min}, {temp_max}] for {provider}"
+            f"[{temp_min}, {temp_max}] for {provider}"
         )
         warnings.append(msg)
 

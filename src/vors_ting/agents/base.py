@@ -18,7 +18,7 @@ class BaseAgent(ABC):
         name: str,
         role: str,
         model: str,
-        provider: str,
+        provider: str | None,
         temperature: float = 0.2,
         system_prompt: str | None = None,
     ) -> None:
@@ -26,7 +26,7 @@ class BaseAgent(ABC):
         self.name: str = name
         self.role: str = role
         self.model: str = model
-        self.provider: str = provider
+        self.provider: str = provider or ""
         self.temperature: float = temperature
         self.system_prompt: str = (
             system_prompt or self._get_default_system_prompt()
