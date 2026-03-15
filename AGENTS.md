@@ -55,6 +55,36 @@ cd path; uv run pytest
 - Skip slow: `pytest -m "not slow"`
 - Run only slow: `pytest -m slow`
 
+## Devcontainer Tools (Available in `devcontainer/Dockerfile.kimi`)
+
+| Tool | Purpose | Example |
+|------|---------|---------|
+| `rg` | Fast grep with gitignore | `rg 'class.*Agent' src/` |
+| `bat` | Syntax-highlighted cat | `bat src/vors_ting/core/config.py` |
+| `eza` | Modern ls (alias: `ls`) | `eza -la --git` |
+| `yq` | YAML processor | `yq '.agents[0].model' examples/simple.yaml` |
+| `fzf` | Fuzzy finder | `fd -t f | fzf` |
+| `hyperfine` | Benchmark | `hyperfine 'uv run pytest -x'` |
+| `dust` | Visual du | `dust -d 2` |
+| `xh` | HTTP client | `xh httpie.io/hello` |
+| `rga` | Search in PDFs/zips | `rga 'TODO' docs/` |
+| `tre` | Git-aware tree | `tre -e` |
+| `tokei` | Code stats | `tokei src/` |
+| `procs` | Modern ps | `procs --tree` |
+| `sd` | Modern sed | `sd 'old' 'new' *.py` |
+| `choose` | Column select | `ps aux | choose 1 11` |
+| `sg` | ast-grep (structural) | `sg -p 'class $C' -l python` |
+| `difft` | difftastic | `git difftool --tool=difftastic` |
+| `fdf` | fd-find (alias: `fd`) | `fd -e py 'config'` |
+| `delta` | Git pager | `git diff | delta` |
+| `zoxide` | Smart cd | `z src` (or `cd src`) |
+| `jq` | JSON processor | `cat file.json \| jq '.key'` |
+| `scc` | Code counter | `scc src/` |
+| `broot` | Interactive file tree | `broot` (or `br`) |
+| `glow` | Markdown renderer | `glow README.md` |
+| `git-extras` | Git utilities | `git summary`, `git effort` |
+| `tldr` | Quick command help (tealdeer) | `tldr tar` |
+
 ## Code Patterns
 
 ### Correct Import Pattern

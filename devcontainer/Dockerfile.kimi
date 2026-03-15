@@ -1,29 +1,91 @@
 # Use the official Astral uv image (Python 3.13 on Debian Trixie)
 FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim
 
+# Enable trixie-backports for ripgrep-all
+RUN echo 'deb http://deb.debian.org/debian trixie-backports main' > /etc/apt/sources.list.d/backports.list
+
 # Install essential system tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     ca-certificates \
-    golang-1.24-go \
+    unzip \
+    jq \
+    yq \
+    fd-find \
+    git-delta \
+    zoxide \
     && rm -rf /var/lib/apt/lists/*
 
-# Add Go to PATH
-ENV PATH="/usr/lib/go-1.24/bin:$PATH"
+# Install ast-grep (latest release)
+RUN curl -fsSL https://github.com/ast-grep/ast-grep/releases/latest/download/app-x86_64-unknown-linux-gnu.zip -o /tmp/sg.zip \
+    && unzip -o /tmp/sg.zip -d /usr/local/bin/ \
+    && rm /tmp/sg.zip
+
+# Install difftastic
+RUN curl -fsSL https://github.com/Wilfred/difftastic/releases/download/0.63.0/difft-x86_64-unknown-linux-gnu.tar.gz \
+    | tar -xz -C /usr/local/bin/
+
+# Install scc (code counter)
+RUN curl -fsSL https://github.com/boyter/scc/releases/download/v3.5.0/scc_Linux_x86_64.tar.gz \
+    | tar -xz -C /usr/local/bin/
+
+# Install additional apt-available tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ripgrep \
+    bat \
+    fzf \
+    hyperfine \
+    du-dust \
+    eza \
+    broot \
+    glow \
+    git-extras \
+    tealdeer \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install xh (HTTP client)
+RUN curl -fsSL https://github.com/ducaale/xh/releases/download/v0.23.1/xh-v0.23.1-x86_64-unknown-linux-musl.tar.gz \
+    | tar -xz --strip-components=1 -C /usr/local/bin/
+
+# Install ripgrep-all from backports
+RUN apt-get update && apt-get install -y --no-install-recommends -t trixie-backports \
+    ripgrep-all \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install tre (tree replacement with git awareness)
+RUN curl -fsSL https://github.com/dduan/tre/releases/download/v0.4.0/tre-v0.4.0-x86_64-unknown-linux-musl.tar.gz \
+    | tar -xz -C /usr/local/bin/
+
+# Install tokei (code statistics - faster than scc)
+RUN curl -fsSL https://github.com/XAMPPRocky/tokei/releases/download/v12.1.2/tokei-x86_64-unknown-linux-gnu.tar.gz \
+    | tar -xz -C /usr/local/bin/
+
+# Install procs (modern ps)
+RUN curl -fsSL https://github.com/dalance/procs/releases/download/v0.14.11/procs-v0.14.11-x86_64-linux.zip -o /tmp/procs.zip \
+    && unzip -o /tmp/procs.zip -d /usr/local/bin/ \
+    && rm /tmp/procs.zip
+
+# Install sd (modern sed)
+RUN curl -fsSL https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-gnu.tar.gz \
+    | tar -xz --strip-components=1 -C /usr/local/bin/
+
+# Install choose (cut/awk alternative)
+RUN curl -fsSL https://github.com/theryangeary/choose/releases/download/v1.3.6/choose-x86_64-unknown-linux-gnu \
+    -o /usr/local/bin/choose && chmod +x /usr/local/bin/choose
 
 # Pre-install Kimi CLI
-RUN uv tool install --python 3.13 kimi-cli
+RUN uv tool install kimi-cli
 
-# Install beans CLI (task tracker)
-# Note: Go will auto-download newer toolchain if beans requires it
-RUN go install github.com/hmans/beans@latest
+# Install beans CLI (task tracker) from binary release
+RUN curl -fsSL https://github.com/hmans/beans/releases/download/v0.4.2/beans_Linux_x86_64.tar.gz \
+    | tar -xz -C /usr/local/bin/
 
 # Set working directory
 WORKDIR /workspace
 
-# Add bins to PATH (include Go bin for beans and any auto-downloaded toolchains)
-ENV PATH="/root/.local/bin:/root/go/bin:/usr/lib/go-1.24/bin:$PATH"
+# Add bins to PATH
+ENV PATH="/root/.local/bin:$PATH"
 
 # Global git fix
 RUN git config --global --add safe.directory /workspace
